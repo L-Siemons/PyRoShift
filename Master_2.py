@@ -92,6 +92,76 @@ def read_in_mean_results(res_file):
     res.close()
     return MeanResults
 
+def read_in_sec_struc_res(res_file):
+    ''' this function is here to read in the chemical shifts according to the secondry structure
+    where as before we had only a random coil '''
+
+    Results = {}
+    res = open(res_file, 'r')
+    
+    #here we read in the results from the .dat file
+    check = 0
+    for line in res.readlines():
+        split = line.split()
+        
+        try:
+            if split[0] == '#Mean':
+                check = 1
+            #this check is so we ony read the first part of the data file
+            if check != 1:
+                if line[0] != '#':
+                    Results[split[0], split[1], split[2],split[3],split[4]] = float(split[5])
+        except IndexError:
+            pass
+    bSheetData = {}
+    aHelixData = {}
+    #mean dictionaries for the secondry structures
+    MeanBSheetData = {}
+    MeanAHelixData = {}
+    print Results
+    
+    for key in Results:
+        print key 
+        # these just define the redion of the aHelix in the Ramachadran plot
+        if float(key[1]) >= float(-140) and float(key[1]) <= float(-30):
+            if float(key[2]) >= float(-91) and float(key[2]) <= float(38):
+                try:
+                    print 'I am here'
+                    aHelixData[key[0],key[3],key[4]].append(Results[key])
+                except KeyError:
+                    aHelixData[key[0],key[3],key[4]] = []
+                    aHelixData[key[0],key[3],key[4]].append(Results[key])
+                #print 'added something to a list'
+            
+        # these just define the redion of the bsheet in the Ramachadran plot
+        if float(key[1]) >= float(-170) and float(key[1]) <= float(-42):
+            if float(key[2]) >= float(65) and float(key[2]) <= float(180):
+                try:
+                    bSheetData[key[0],key[3],key[4]].append(Results[key])
+                except KeyError:
+                    bSheetData[key[0],key[3],key[4]] = []
+                    bSheetData[key[0],key[3],key[4]].append(Results[key])
+                #print 'added something to b list'
+
+    #making the means results for 
+
+    for key in bSheetData:
+        meanBCs = np.divide(sum(bSheetData[key]),len(bSheetData[key]))
+        MeanBSheetData[key] = meanBCs
+        
+        #these lines just gives the standard deviation should you need it 
+        #meanStd = np.std(bSheetData[key])
+        #MeanBSheetData[key].append(meanStd)
+
+    for key in bSheetData:
+        meanACs = np.divide(sum(aHelixData[key]),len(aHelixData[key]))
+        MeanAHelixData[key] = meanACs    
+    res.close()
+    
+    print MeanAHelixData
+    print  MeanBSheetData
+    return MeanAHelixData, MeanBSheetData
+
 
 def First_Gen(Sim_number_iteration, pop_size):
     
@@ -485,11 +555,25 @@ def fitness(Generation_dict):
 #Writing out the first population ----------------------
 
 
-def set_up(Mean_CS_file,  Measured_CS_file):
-    Mean_CS_1 = read_in_mean_results(Mean_CS_file)
+def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
+    ''' Note that sec_struct can be set to A, B or R for alpha helix 
+        beta sheet of random coil / unknown '''
+    #this part checks that secondary  structure. -- could be done better because it reads Results.dat twice
+    R_coil_Mean_CS = read_in_mean_results(Mean_CS_file)
+    a_helix_CS, b_sheet_CS = read_in_sec_struc_res(Mean_CS_file)
     Measured_CS_1 = ReadIn_measured_C_shifts(Measured_CS_file)
     
-    return Mean_CS_1, Measured_CS_1
+    if sec_struct == 'R':
+        selected_Mean_CS = R_coil_Mean_CS
+    elif sec_struct == 'A':
+        selected_Mean_CS = a_helix_CS
+    elif sec_struct == 'B':
+        selected_Mean_CS = b_sheet_CS
+    else:
+        print '''ERROR: one of the options selected was not a recognised secondry structure type. 
+        Pease check the set_up() function'''
+        sys.exit()
+    return selected_Mean_CS, Measured_CS_1
 
 def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number):
     
@@ -583,9 +667,9 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
 
 if __name__ == '__main__':
 
-    average_CS, experimental_CS = set_up('Results.dat',  'Measured_shifts.txt')
-    #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations, verbose,  Max_gen_number)
-    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global)
+    average_CS, experimental_CS = set_up('Results.dat',  'Measured_shifts.txt', 'A')
+    #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
+    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,)
 
 
 
