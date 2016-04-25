@@ -118,15 +118,14 @@ def read_in_sec_struc_res(res_file):
     #mean dictionaries for the secondry structures
     MeanBSheetData = {}
     MeanAHelixData = {}
-    print Results
     
     for key in Results:
-        print key 
+
         # these just define the redion of the aHelix in the Ramachadran plot
         if float(key[1]) >= float(-140) and float(key[1]) <= float(-30):
             if float(key[2]) >= float(-91) and float(key[2]) <= float(38):
                 try:
-                    print 'I am here'
+
                     aHelixData[key[0],key[3],key[4]].append(Results[key])
                 except KeyError:
                     aHelixData[key[0],key[3],key[4]] = []
@@ -158,8 +157,7 @@ def read_in_sec_struc_res(res_file):
         MeanAHelixData[key] = meanACs    
     res.close()
     
-    print MeanAHelixData
-    print  MeanBSheetData
+
     return MeanAHelixData, MeanBSheetData
 
 
@@ -268,11 +266,7 @@ def Euclidean_Distance(computed, observed):
     NOTE - should check this part... when i get a real example'''
     
     distance = {}
-    
-    #print computed
-    
-    
-    
+
     for individual in computed: 
         distance_sum = 0
     
