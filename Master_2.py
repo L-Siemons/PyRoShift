@@ -19,6 +19,9 @@ verbose_text = 1
 #write out each generation 1 = yes, 0 = now
 write_gen = 1
 
+#chance of zero when making the initial individual state being assigned a zero populaiton
+zero_chance = 5
+
 
 #some variables
 
@@ -181,7 +184,12 @@ def First_Gen(Sim_number_iteration, pop_size):
         Random_Sum = 0
         for i in range(number_of_states):
             #here the first generation is made randomly 
-            RandomFloat = rn.random()
+            chance = rn.randint(0,100)
+            if chance <= zero_chance:
+        
+                RandomFloat = 0.0000000001
+            else:
+                RandomFloat = rn.random()
             WorkingRandomList.append(RandomFloat )
             Random_Sum = Random_Sum + RandomFloat 
         
