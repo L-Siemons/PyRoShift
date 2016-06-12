@@ -456,22 +456,22 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
         
     return new_generation
 
-def Write_out(gen_number, populaton_dict, sim_number, dict_type, write_out, pop_size):
+def Write_out(gen_number, populaton_dict, sim_number, dict_type, write_out, pop_size, out_dir):
     
     if write_out == 0:
         return None
         
     try:
-        os.mkdir(str(dict_type))
+        os.mkdir(out_dir+str(dict_type))
     except OSError:
         pass
     
     try:
-        os.mkdir(str(dict_type)+'/Simulation_'+str(sim_number)+'/')
+        os.mkdir(out_dir+str(dict_type)+'/Simulation_'+str(sim_number)+'/')
     except OSError:
         pass
         
-    dir_name = str(dict_type)+'/Simulation_'+str(sim_number)+'/gen_'+str(gen_number)+'.txt'
+    dir_name = out_dir+str(dict_type)+'/Simulation_'+str(sim_number)+'/gen_'+str(gen_number)+'.txt'
     file = open(dir_name,'w')
     
     for i in range(pop_size):
@@ -510,10 +510,10 @@ def Simulation_end_conditions(gen_counter, max_generations, Close_enough_to_meas
     #generations
     return output
 
-def Wite_solutions(best_indiv_id, final_gen): 
+def Wite_solutions(best_indiv_id, final_gen, out_dir): 
     
     
-    S_file = open("Solutions.txt", 'a')
+    S_file = open(out_dir+"Solutions.txt", 'a')
     for i in range(len(final_gen[best_indiv_id])):
         S_file.write( str(final_gen[best_indiv_id][i] ) + '   ' )
     S_file.write('\n')
@@ -577,7 +577,12 @@ def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
         sys.exit()
     return selected_Mean_CS, Measured_CS_1
 
-def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number):
+def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number, out_direc):
+    
+    try:
+        os.mkdir( out_direc )
+    except OSError:
+        print 'directory already exists'
     
     if verbose == '1':
         print '''#====================================================================
@@ -591,14 +596,14 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
         #the first gen is produced randomly
         Generation_1 = First_Gen(i, pop_size) 
     
-        Write_out(1,Generation_1, i, 'Generations', write_gen, pop_size)
+        Write_out(1,Generation_1, i, 'Generations', write_gen, pop_size, out_direc)
     
         #now we work out the shifts 
         indiv_shifts = Computed_shifts(Generation_1,  Mean_CS)
     
         #these are the distances bewteen the generated shifts and the observed shifts 
         distances = Euclidean_Distance(indiv_shifts, Measured_CS)
-        Write_out(1, distances, i, 'Distances', write_gen, pop_size)
+        Write_out(1, distances, i, 'Distances', write_gen, pop_size, out_direc)
     
         #this is used to make the probabilities 
         recpirical = reciprocal(distances, Generation_1)    
@@ -626,7 +631,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
             new_gen = mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, Mutation_rate) 
         
         
-            Write_out(generation_Counter, new_gen, i, 'Generations', write_gen, pop_size)
+            Write_out(generation_Counter, new_gen, i, 'Generations', write_gen, pop_size, out_direc)
         
             #work out the shifts and the distances
         
@@ -635,7 +640,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
         
             distances = {}
             distances = Euclidean_Distance(indiv_shifts, Measured_CS)
-            Write_out(generation_Counter, distances, i, 'Distances', write_gen, pop_size)
+            Write_out(generation_Counter, distances, i, 'Distances', write_gen, pop_size, out_direc)
     
             #do the reciprocal
             recpirical = reciprocal(distances,new_gen)    
@@ -659,7 +664,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
                 shortest_distance = distances[item]
                 best_individual = item
         
-        Wite_solutions(best_individual, Parent_Generation)
+        Wite_solutions(best_individual, Parent_Generation, out_direc)
     
     print 'coffee time is over!' 
     print '==================='
@@ -671,7 +676,7 @@ if __name__ == '__main__':
 
     average_CS, experimental_CS = set_up('Results.dat',  'Measured_shifts.txt', 'A')
     #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
-    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,)
+    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,'test/')
 
 
 
