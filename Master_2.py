@@ -14,10 +14,10 @@ import pickle as pic
 start = time.time()
 
 #this meas we will be writing everything out!
-verbose_text = 1
+verbose_text = 0
 
 #write out each generation 1 = yes, 0 = now
-write_gen = 1
+write_gen = 0
 
 #chance of zero when making the initial individual state being assigned a zero populaiton
 zero_chance = 5
@@ -260,7 +260,7 @@ def Computed_shifts(individuals, rotamer_shifts): #not right yet
 
     return Shifts
       
-def Euclidean_Distance(computed, observed):
+def Distance(computed, observed,dist_func):
     '''here we produce a set of Euclidian distances between the set of shifts for each population member and 
     the observed chemical shift this is written to a dictionary
     
@@ -271,27 +271,51 @@ def Euclidean_Distance(computed, observed):
     
     observed is the observed / measured chemical shifts
     
-    NOTE - should check this part... when i get a real example'''
+    NOTE - should check this part... when i get a real example
+
+    dist_func - this allows you to choose the distance function that compares the 
+                individual's CS with the observed one
+
+
+    '''
     
     distance = {}
 
     for individual in computed: 
-        distance_sum = 0
-    
-        for carbon in range(len(Side_chain_carbons)):
-            if observed[Side_chain_carbons[carbon]] != "none":
-                
-                #this bit is just the sum for the distance over many lines
-                a = float(computed[individual][carbon])
-                b =  float(observed[Side_chain_carbons[carbon]])
-                c = (a - b)
-                d = c**2
-                distance_sum = distance_sum+ d
-
-            final_distance = np.sqrt(distance_sum)
-            distance[individual] = final_distance
+        args=(individual,observed,computed)
+        distance[individual] = dist_func(*args)
     
     return distance
+
+def Euclid_dis(individual,observed,computed):
+    distance_sum = 0
+    for carbon in range(len(Side_chain_carbons)):
+        if observed[Side_chain_carbons[carbon]] != "none":
+                
+            #this bit is just the sum for the distance over many lines
+            a = float(computed[individual][carbon])
+            b =  float(observed[Side_chain_carbons[carbon]])
+            c = (a - b)
+            d = c**2
+            distance_sum = distance_sum+ d
+
+    final_distance = np.sqrt(distance_sum)
+    return final_distance
+
+def Chi_squared(individual,observed,computed):
+    distance_sum = 0
+    for carbon in range(len(Side_chain_carbons)):
+        if observed[Side_chain_carbons[carbon]] != "none":
+                
+            #this bit is just the sum for the distance over many lines
+            a = float(computed[individual][carbon])
+            b =  float(observed[Side_chain_carbons[carbon]])
+            c = (a - b)
+            d = c**2
+            distance_sum = distance_sum+ d
+
+    final_distance = distance_sum
+    return final_distance
 
 def compare_populations(generated_rotamers):
     '''This also just does a euclidian distance between the generated population and a 
@@ -344,6 +368,7 @@ def reciprocal(dict, previous_gen):
     
     for key in dict: 
         #a = np.divide(1,np.exp((   dict[key])))
+
         a = np.divide(1,(dict[key]))
         
         #the next two lines allow us to select for values which are not close 
@@ -401,7 +426,7 @@ def select_parents(daughter_generation, probabilities, pop_size):
         parent_list.append([parent_1, parent_2])
     return parent_list
                 
-def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shifts, Mutation_rate):
+def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shifts, Mutation_rate,func):
     
     ''' the aim of this function is to take the list of 'parents couples' and produce the 
     new individual from each couple'''
@@ -441,7 +466,7 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
         family[2] = current_individual
 
         family_shifts = Computed_shifts(family,  MeanResults)     
-        family_distances = Euclidean_Distance(family_shifts, Measured_shifts)
+        family_distances = Distance(family_shifts, Measured_shifts,func)
         
         Shortest_distance_in_family = 1000
         family_member = 4
@@ -520,35 +545,7 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir):
     S_file.close()
     
    
-'''#CURRENTLY REDUNDANT ***************************************************
-def R_coil_Dict(Results, states, Carbon_ids):
-    averaged_res = {}
-    for id in Carbon_ids:
-        for state in states:
 
-            working_c_shift = 0.0
-            counter = 0.0
-
-            for key in Results:
-
-                if key[0] == id:
-                    try: 
-                        if key.index(state[1]) == key.index(state[0]) + 1:
-                            working_c_shift = working_c_shift + Results[key]
-                            counter = counter + 1.0  
-                            
-                    except ValueError:
-                        pass
-            
-            print counter
-            state_c_shift = np.divide(working_c_shift,counter)    
-            averaged_res[id,state[0],state[1]] = state_c_shift
-    return averaged_res ## CURRENTLY REDUNDANT  
-
-def fitness(Generation_dict):
-    fitness_dict = {}
-    for i in range(pop_size):
-        fitness_dict[i] = 0'''
 #====================================================================
 #Doing stuff
 #====================================================================
@@ -577,7 +574,7 @@ def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
         sys.exit()
     return selected_Mean_CS, Measured_CS_1
 
-def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number, out_direc):
+def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number, out_direc,func):
     
     try:
         os.mkdir( out_direc )
@@ -602,7 +599,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
         indiv_shifts = Computed_shifts(Generation_1,  Mean_CS)
     
         #these are the distances bewteen the generated shifts and the observed shifts 
-        distances = Euclidean_Distance(indiv_shifts, Measured_CS)
+        distances = Distance(indiv_shifts, Measured_CS,func)
         Write_out(1, distances, i, 'Distances', write_gen, pop_size, out_direc)
     
         #this is used to make the probabilities 
@@ -628,7 +625,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
         
             #Here we make the new generation
             new_gen = {}
-            new_gen = mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, Mutation_rate) 
+            new_gen = mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, Mutation_rate,func) 
         
         
             Write_out(generation_Counter, new_gen, i, 'Generations', write_gen, pop_size, out_direc)
@@ -639,7 +636,7 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
             indiv_shifts = Computed_shifts(new_gen,  Mean_CS)
         
             distances = {}
-            distances = Euclidean_Distance(indiv_shifts, Measured_CS)
+            distances = Distance(indiv_shifts, Measured_CS,func)
             Write_out(generation_Counter, distances, i, 'Distances', write_gen, pop_size, out_direc)
     
             #do the reciprocal
@@ -673,10 +670,13 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
 
 
 if __name__ == '__main__':
+    
+    dist_func = Euclid_dis
+    print 'using '+ str(dist_func.__name__)
 
     average_CS, experimental_CS = set_up('Results.dat',  'Measured_shifts.txt', 'A')
     #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
-    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,'test/')
+    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,'test/',dist_func)
 
 
 
