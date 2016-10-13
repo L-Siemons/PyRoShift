@@ -586,6 +586,8 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
 #starting ...
 #===================================================================='''
 
+    
+    print 'using %s to drive the fitness function' %(func.__name__)
     initial_pop = {}             #starting population
     
     for i in range(number_of_simulations):
