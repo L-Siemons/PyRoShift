@@ -14,31 +14,29 @@ import pickle as pic
 start = time.time()
 
 #this meas we will be writing everything out!
-verbose_text = 0
+#verbose_text = 0
 
 #write out each generation 1 = yes, 0 = now
-write_gen = 0
+#write_gen = 0
 
 #chance of zero when making the initial individual state being assigned a zero populaiton
-zero_chance = 5
-
+#zero_chance = 5
 
 #some variables
-
 #states used: this is the order of the staets and the  number used in the algorithm  
 #usedCC = [[-175,167],[-167,65],[-64,-169],[-54, 91],[-76, 68],[-58,-60],[60,174],[55,84],[-64,169]]
 #usedCC = [[-175,167],[-167,65],[-76, 68],[-58,-60],[60,174],[55,84],[-64,169]]
 
-usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
+#usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
 
 #for later use these are the backbone angles
-usedPP = np.array([[-64, -45], [-71, -18],[-112, 8],[-105, -45],[-130, 157],[-126, 129],[-115, 126],[-100, 126],[-72, 132]])
+#usedPP = np.array([[-64, -45], [-71, -18],[-112, 8],[-105, -45],[-130, 157],[-126, 129],[-115, 126],[-100, 126],[-72, 132]])
 
 #these are the carbon identifiers
-cList = ['1','2','4','5','6','8','10','12','24']
-Side_chain_carbons = ['4','5', '6','12','24']
+#cList = ['1','2','4','5','6','8','10','12','24']
+#Side_chain_carbons = ['4','5', '6','12','24']
 
-pop_size_global = 20  #size of initial population
+#pop_size_global = 20  #size of initial population
 
 #i think the filtering in the cross over stage give a preference to higher mutation rates
 #but ... again maybe its just an idea, not tested because when we filter them out a bad mutation will be disregarded
@@ -48,17 +46,79 @@ pop_size_global = 20  #size of initial population
 #when it was 95 it took 170 gen
 
 
-Mutation_rate_global = 60.0
-number_of_simulations_global = 1
+#Mutation_rate_global = 60.0
+#number_of_simulations_global = 1
 simulation_Number = 0
 simulation_Path ='Generations/Simulation_'
-number_of_states = len(usedCC)
+#number_of_states = len(usedCC)
 
 
 
 #these are used to determine the end conditions
-Max_gen_number_global = 20
+#Max_gen_number_global = 20
 Close_enough_to_measured = 0.000000001
+
+#====================================================================
+# Class to read in the input file
+#====================================================================
+
+#this class reads in the input file and bundles the 
+#parameters for the GA.
+
+class ReadInputFile:
+    def __init__(self, inputFile):
+        f = open(inputFile, 'r')
+        
+        for line in f.readlines():
+            
+            if line[0] != ';':
+                split = line.split()    
+                
+                #these are the input feilds 
+                
+                #distance measure
+                if split[0] == 'dist_func':
+                    if split[1] == 'Euclid_dis':
+                        self.disMeasure = Euclid_dis
+                    else:
+                        print 'The distance measure does noe exist'
+                        sys.exit()
+                
+                #population size
+                if split[0] == 'pop_size':
+                    self.popSize = int(split[1])
+                
+                if split[0] == 'Mutation_rate':
+                    self.Mutation_rate = int(split[1])
+                
+                if split[0] == 'verbose':
+                    self.verbose = int(split[1])
+                
+                if split[0] == 'Max_gen_number':
+                    self.Max_gen_number = int(split[1])
+                
+                if split[0] == 'write_out_location':
+                    self.write_out_location = split[1]
+                
+                if split[0] == 'residue':
+                    if split[1] == 'ILE':
+                        self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
+                        self.cList = ['1','2','4','5','6','8','10','12','24']
+                        self.Side_chain_carbons = ['4','5', '6','12','24']
+                
+                if split[0] == 'CalcRes':
+                    self.calcRes = split[1]
+                    
+                if split[0] == 'ExpShifts':
+                    self.expShifts = split[1]
+                
+                if split[0] == 'zero_chance':
+                    self.zeros = int(split[1])
+
+                if split[0] == 'write_gen':
+                    self.write_gen = int(split[1])
+                
+        f.close()
 
 #====================================================================
 #Defining functions
@@ -574,7 +634,50 @@ def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
         sys.exit()
     return selected_Mean_CS, Measured_CS_1
 
-def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_simulations, verbose,  Max_gen_number, out_direc,func):
+def algo(Mean_CS, Measured_CS, params): 
+    
+    #setting up input params
+    global verbose_text
+    verbose_text = params.verbose
+   
+    global verbose
+    verbose = params.verbose
+    
+    global write_gen 
+    write_gen = params.write_gen
+    
+    global zero_chance
+    zero_chance = params.zeros
+    
+    global usedCC
+    usedCC = params.usedCC
+
+    global cList
+    cList = params.cList
+    
+    global Side_chain_carbons
+    Side_chain_carbons = params.Side_chain_carbons
+
+    global pop_size
+    pop_size = params.popSize
+    
+    global Mutation_rate
+    Mutation_rate = params.Mutation_rate
+    
+    global number_of_states
+    number_of_states = len(usedCC)
+    
+    global out_direc
+    out_direc = params.write_out_location
+    
+    global func
+    func = params.disMeasure
+    
+    global number_of_simulations
+    number_of_simulations = 1
+    
+    global Max_gen_number
+    Max_gen_number = params.Max_gen_number
     
     try:
         os.mkdir( out_direc )
@@ -673,12 +776,15 @@ def algo(Mean_CS, Measured_CS, write_gen, pop_size, Mutation_rate, number_of_sim
 
 if __name__ == '__main__':
     
+    params = ReadInputFile('InputFile.txt')
+    calRes = params.calcRes
+    expshifts = params.expShifts
+    
     dist_func = Euclid_dis
     print 'using '+ str(dist_func.__name__)
-
-    average_CS, experimental_CS = set_up('Results.dat',  'Measured_shifts.txt', 'A')
+    average_CS, experimental_CS = set_up(calRes,  expshifts,'R')
     #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
-    algo(average_CS, experimental_CS, write_gen, pop_size_global, Mutation_rate_global, number_of_simulations_global, verbose_text, Max_gen_number_global,'test/',dist_func)
+    algo(average_CS, experimental_CS, params)
 
 
 
