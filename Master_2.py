@@ -604,6 +604,7 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Mea
     
     #here we write out the populations
     out_name = out_dir+sol_name
+    print 'outname:  ', out_name
     S_file = open(out_name, 'a')
     
     total = sum(final_gen[best_indiv_id])
@@ -618,7 +619,7 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Mea
     #input chemical shift
     
     #the file for the best individual to be written to
-    best_indiv_name = out_name.split('.')[0] + '_bestIndiv.txt'
+    best_indiv_name = out_name + '_bestIndiv.txt'
     
     #this is just some reformatting so we can use Computed_shifts()
     dummyDict = {}
@@ -627,15 +628,18 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Mea
     #calculate the chemical shift
     closest_shifts = Computed_shifts(dummyDict, Mean_CS)
     
+    print 'best f name: ', best_indiv_name
+    print 'cs' , closest_shifts
     bestIndiv = open(best_indiv_name, 'w')
     
     #write out the chemical shift
-    for atom, cs in zip(Side_chain_carbons, closest_shifts):
+    print closest_shifts
+    for atom, cs in zip(Side_chain_carbons, closest_shifts['dummy']):
         bestIndiv.write('%s   %s\n'% (atom, cs))
 
 
     #calculate the distance
-    distance = Distance(dummyDict, Measured_CS,func)
+    distance = Distance(closest_shifts, Measured_CS,func)
     
     bestIndiv.write('Distance: %f' % (distance['dummy']))
     bestIndiv.close()
@@ -670,7 +674,7 @@ def setup_Fitted_DFT(Mean_CS_file,  Measured_CS_file, sec_struct,params, read_me
     
     for line in dft.readlines():
         split = line.split()
-        print line
+        #print line
         if split[0] == 'alpha':
             angles = [split[1][0], split[1][1]]
             if angles in usedCC:
