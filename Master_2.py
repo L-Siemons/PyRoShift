@@ -103,6 +103,7 @@ class ReadInputFile:
                 if split[0] == 'residue':
                     if split[1] == 'ILE':
                         self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
+                        self.usedCC = [['t','t'], ['t','p'],['m','m'],['p','t'],['m','t']]
                         self.cList = ['1','2','4','5','6','8','10','12','24']
                         self.Side_chain_carbons = ['4','5', '6','12','24']
                 
@@ -118,6 +119,9 @@ class ReadInputFile:
                 if split[0] == 'write_gen':
                     self.write_gen = int(split[1])
                 
+                if split[0] == 'sol_name':
+                    self.sol_name = split[1]
+
         f.close()
 
 #====================================================================
@@ -265,7 +269,8 @@ def First_Gen(Sim_number_iteration, pop_size):
 
 def Computed_shifts(individuals, rotamer_shifts): #not right yet
 
-    '''The aim of this function is to take all the individuals, ie the populations 
+    '''
+    The aim of this function is to take all the individuals, ie the populations 
     of each state and work out the chemical shifts for the 5 carbon atoms on the ILE 
     side chain. This is stored in the Dictionary Shifts, where the key is the individual identifier 
     and the entry is the list of the chemical shifts. These are in the same order as the 
@@ -425,7 +430,7 @@ def reciprocal(dict, previous_gen):
     
     
     Recip = {}
-    
+    #print dict
     for key in dict: 
         #a = np.divide(1,np.exp((   dict[key])))
 
@@ -595,15 +600,47 @@ def Simulation_end_conditions(gen_counter, max_generations, Close_enough_to_meas
     #generations
     return output
 
-def Wite_solutions(best_indiv_id, final_gen, out_dir): 
+def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Measured_CS): 
     
+    #here we write out the populations
+    out_name = out_dir+sol_name
+    S_file = open(out_name, 'a')
     
-    S_file = open(out_dir+"Solutions.txt", 'a')
+    total = sum(final_gen[best_indiv_id])
+
     for i in range(len(final_gen[best_indiv_id])):
-        S_file.write( str(final_gen[best_indiv_id][i] ) + '   ' )
+
+        S_file.write( str(np.divide(final_gen[best_indiv_id][i], total) ) + '   ' )
     S_file.write('\n')
     S_file.close()
     
+    #here we write out the final chemical shifts we obtainand the final distance between these and the 
+    #input chemical shift
+    
+    #the file for the best individual to be written to
+    best_indiv_name = out_name.split('.')[0] + '_bestIndiv.txt'
+    
+    #this is just some reformatting so we can use Computed_shifts()
+    dummyDict = {}
+    dummyDict['dummy'] = final_gen[best_indiv_id]
+
+    #calculate the chemical shift
+    closest_shifts = Computed_shifts(dummyDict, Mean_CS)
+    
+    bestIndiv = open(best_indiv_name, 'w')
+    
+    #write out the chemical shift
+    for atom, cs in zip(Side_chain_carbons, closest_shifts):
+        bestIndiv.write('%s   %s\n'% (atom, cs))
+
+
+    #calculate the distance
+    distance = Distance(dummyDict, Measured_CS,func)
+    
+    bestIndiv.write('Distance: %f' % (distance['dummy']))
+    bestIndiv.close()
+
+
    
 
 #====================================================================
@@ -613,6 +650,87 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir):
 #setting up the folder structure here ------ 
 #Writing out the first population ----------------------
 
+def setup_Fitted_DFT(Mean_CS_file,  Measured_CS_file, sec_struct,params, read_measured_cs='yes'):
+
+    '''
+    This setup file used the chemical shifts derived from the fitted DFT minima 
+    these are currently held in CS_ile_DFT.dat
+
+    the secondary structure can be A B or R for alpha beta or random coil 
+
+    '''
+
+    alphaDFT = {}
+    betaDFT  = {}
+    rcDFT    = {}
+
+    usedCC = params.usedCC
+    dft = open(Mean_CS_file, 'r')
+    #print 'states used:   ',  usedCC
+    
+    for line in dft.readlines():
+        split = line.split()
+        print line
+        if split[0] == 'alpha':
+            angles = [split[1][0], split[1][1]]
+            if angles in usedCC:
+                alphaDFT['4', angles[0], angles[1]] = float(split[2])
+                alphaDFT['5', angles[0], angles[1]] = float(split[3])
+                alphaDFT['6', angles[0], angles[1]] = float(split[4])
+                alphaDFT['12', angles[0], angles[1]] = float(split[5])
+                alphaDFT['24', angles[0], angles[1]] = float(split[6])
+
+        if split[0] == 'beta':
+            angles = [split[1][0], split[1][1]]
+            if angles in usedCC:
+                betaDFT['4', angles[0], angles[1]] = float(split[2])
+                betaDFT['5', angles[0], angles[1]] = float(split[3])
+                betaDFT['6', angles[0], angles[1]] = float(split[4])
+                betaDFT['12', angles[0], angles[1]] = float(split[5])
+                betaDFT['24', angles[0], angles[1]] = float(split[6])
+
+        if split[0] == 'rCoil':
+            angles = [split[1][0], split[1][1]]
+            if angles in usedCC:
+                rcDFT['4', angles[0], angles[1]] = float(split[2])
+                rcDFT['5', angles[0], angles[1]] = float(split[3])
+                rcDFT['6', angles[0], angles[1]] = float(split[4])
+                rcDFT['12', angles[0], angles[1]] = float(split[5])
+                rcDFT['24', angles[0], angles[1]] = float(split[6])
+
+    dft.close()
+
+    if sec_struct == 'R':
+        selected_Mean_CS = rcDFT
+    elif sec_struct == 'A':
+        selected_Mean_CS = alphaDFT
+    elif sec_struct == 'B':
+        selected_Mean_CS = betaDFT
+    else:
+        print '''ERROR: one of the options selected was not a recognised secondry structure type. 
+        Pease check the set_up() function'''
+        sys.exit()
+    #read in the exprimental results
+    if read_measured_cs == 'yes':
+        Measured_CS_1 = ReadIn_measured_C_shifts(Measured_CS_file)
+    else:
+        print 'attention not readin measured CS'
+        Measured_CS_1 = ''
+    dft.close()
+
+    #print 'alpha ------------------'
+    #print alphaDFT
+    #print '------------------'
+
+    #print 'beta ------------------'
+    #print betaDFT
+    #print '------------------'
+
+    #print rcDFT
+    #print '------------------'
+
+
+    return selected_Mean_CS, Measured_CS_1
 
 def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
     ''' Note that sec_struct can be set to A, B or R for alpha helix 
@@ -679,6 +797,12 @@ def algo(Mean_CS, Measured_CS, params):
     global Max_gen_number
     Max_gen_number = params.Max_gen_number
     
+    global sol_name
+    sol_name = params.sol_name
+
+    print 'Max gen number: ' , Max_gen_number
+    print 'population size: ', pop_size
+
     try:
         os.mkdir( out_direc )
     except OSError:
@@ -697,7 +821,7 @@ def algo(Mean_CS, Measured_CS, params):
      
         #the first gen is produced randomly
         Generation_1 = First_Gen(i, pop_size) 
-    
+        
         Write_out(1,Generation_1, i, 'Generations', write_gen, pop_size, out_direc)
     
         #now we work out the shifts 
@@ -766,12 +890,12 @@ def algo(Mean_CS, Measured_CS, params):
                 shortest_distance = distances[item]
                 best_individual = item
         
-        Wite_solutions(best_individual, Parent_Generation, out_direc)
+        Wite_solutions(best_individual, Parent_Generation, out_direc, sol_name, Mean_CS,func,Measured_CS)
     
-    print 'coffee time is over!' 
-    print '==================='
-    print 'It took', time.time()-start, 'seconds.'
-    print '==================='
+    #print 'coffee time is over!' 
+    #print '==================='
+    #print 'It took', time.time()-start, 'seconds.'
+    #print '==================='
 
 
 if __name__ == '__main__':
@@ -781,9 +905,10 @@ if __name__ == '__main__':
     expshifts = params.expShifts
     
     dist_func = Euclid_dis
-    print 'using '+ str(dist_func.__name__)
-    average_CS, experimental_CS = set_up(calRes,  expshifts,'R')
+    #print 'using '+ str(dist_func.__name__)
+    #average_CS, experimental_CS = set_up(calRes,  expshifts,'R')
     #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
+    average_CS, experimental_CS = setup_Fitted_DFT(calRes,  expshifts,'R', params)
     algo(average_CS, experimental_CS, params)
 
 

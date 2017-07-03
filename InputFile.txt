@@ -15,8 +15,9 @@ Max_gen_number         150                         total number of generations
 write_out_location     test/                       Where the results from the GA are written out 
 residue                ILE                         Which residue are we trying to predict the rotamer distribution
 ; =========== File Locations ========
-CalcRes                Results.dat                 File with the calculated results
+CalcRes                Results_DFTminima.dat       File with the calculated results
 ExpShifts              Measured_shifts.txt         File with the measured chemical shifts
+sol_name               Solutions.txt               file contaning the solution
 ; =========== configurations ========
 zero_chance            5                           chance of a element in the individual vector being 0 in gen 1
 write_gen              0
