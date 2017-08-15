@@ -3,12 +3,36 @@
 
 import os
 import sys
-import glob
-import re
 import random as rn 
 import numpy as np 
 import time
 import pickle as pic
+import argparse
+
+
+description = '''
+
+Side chain chemical shifts to populations
+
+The aim of this algorithm is to determine the rotamer populations of 
+isoeleucine from chemical shifts. 
+
+The experimentally observed chemical shifts are listed in the 
+file which by defult is called 'Measured_shifts.txt'.
+The Calculated chemical shifts are given in XXX.
+
+This program was written by Lucas Siemons. 
+If you have any question or issues please contact me at 
+
+Lucas.Siemons@googlemail.com
+
+To Do list 
+1) Go through the doc strings and write the restructured text 
+2) generate the documentation 
+3) 
+
+'''
+
 
 #for a time stamp
 start = time.time()
@@ -56,7 +80,7 @@ simulation_Path ='Generations/Simulation_'
 
 #these are used to determine the end conditions
 #Max_gen_number_global = 20
-Close_enough_to_measured = 0.000000001
+
 
 #====================================================================
 # Class to read in the input file
@@ -66,9 +90,45 @@ Close_enough_to_measured = 0.000000001
 #parameters for the GA.
 
 class ReadInputFile:
+
+    '''
+    This class contains a bunch of parameters that are read from the 'Input file'
+    
+    Args: 
+    InputFile - Input file. 
+
+    '''
+
     def __init__(self, inputFile):
+        
+        '''
+        This function reads the input file and based on the configuration 
+        sets the parameters for the algorithm 
+
+        The parameters that are set are: 
+
+        self.disMeasure - The distance measure used to drive the algoruthm
+                        - currenlty can only be uclid_dis
+
+        self.pop_size   - This is the population size of the GA
+
+        self.Mutation_rate - mutation rate for the GA
+        self.verbose       - verbosity 
+        self.Max_gen_number - maximum generations that the GA runs for 
+        self.write_out_location - where the GA writes out the results 
+        self.usedCC     - the states the GA is set to determine 
+        self.cList      - ids for all the carbon atoms 
+        self.Side_chain_carbons - the used side chain carbon ids 
+        self.CalcRes    - File with the Calculated DFT results
+        self.ExpShifts  - file with the experimental/observed chemical shifts
+        self.zero_chance - frequency of 0s in the first generation
+        self.write_gen   - write out the generaitons 
+        self.sol_name    - name of the solution file
+        '''
+
         f = open(inputFile, 'r')
         
+
         for line in f.readlines():
             
             if line[0] != ';':
@@ -81,12 +141,12 @@ class ReadInputFile:
                     if split[1] == 'Euclid_dis':
                         self.disMeasure = Euclid_dis
                     else:
-                        print 'The distance measure does noe exist'
+                        print 'The distance measure does not exist'
                         sys.exit()
                 
                 #population size
                 if split[0] == 'pop_size':
-                    self.popSize = int(split[1])
+                    self.pop_size = int(split[1])
                 
                 if split[0] == 'Mutation_rate':
                     self.Mutation_rate = int(split[1])
@@ -102,10 +162,11 @@ class ReadInputFile:
                 
                 if split[0] == 'residue':
                     if split[1] == 'ILE':
-                        self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
+                        #self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
                         self.usedCC = [['t','t'], ['t','p'],['m','m'],['p','t'],['m','t']]
                         self.cList = ['1','2','4','5','6','8','10','12','24']
                         self.Side_chain_carbons = ['4','5', '6','12','24']
+                        self.number_of_states = len(self.usedCC)
                 
                 if split[0] == 'CalcRes':
                     self.calcRes = split[1]
@@ -122,6 +183,10 @@ class ReadInputFile:
                 if split[0] == 'sol_name':
                     self.sol_name = split[1]
 
+        #this is curretly a defult value
+        self.Close_enough_to_measured = 0.000000001
+        self.number_of_simulations = 1
+
         f.close()
 
 #====================================================================
@@ -130,14 +195,23 @@ class ReadInputFile:
 
 #This reads in the measured shifts
 def ReadIn_measured_C_shifts(input_file):
-    #note in the original configuration the inputfile is 'Measured_shifts.txt'
-    #these are the target / observed chemical shiftes we want to determine the rotamer populations for
-	ReadIn_shifts = {}
-	inputshifts = open(input_file, 'r')
-	for line in inputshifts.readlines():
-	    split = line.split()
-	    ReadIn_shifts[split[0]] = split[1]
-	return ReadIn_shifts
+    '''
+    Reads in the measured/observed chemical shifts 
+
+    input_file - Name of the file containing the shifts
+    
+    returns 
+    Dict[atom id] = chemical shift
+
+    '''
+
+    ReadIn_shifts = {}
+    inputshifts = open(input_file, 'r')
+    for line in inputshifts.readlines():
+        split = line.split()
+        ReadIn_shifts[split[0]] = split[1]
+
+    return ReadIn_shifts
 
 #this function creates a dictionary of the first generation
 
@@ -228,10 +302,12 @@ def read_in_sec_struc_res(res_file):
     return MeanAHelixData, MeanBSheetData
 
 
-def First_Gen(Sim_number_iteration, pop_size):
+def First_Gen(Sim_number_iteration, params):
     
-    ''' this function aims to produce the first generation, these are produced by the random number generator
-    rn.random()'''
+    '''
+    This function creates the first generation. 
+    It is based on the python random number generator random.random()
+    '''
     
     WorkingRandomList = []
     Random_Sum = 0.0
@@ -240,16 +316,18 @@ def First_Gen(Sim_number_iteration, pop_size):
     
     individuals = {}
     
-    for indiv in range(pop_size):
+    for indiv in range(params.pop_size):
 
         NormalisedList = []
         WorkingRandomList = []
         
+        #This is a sum of the random numbers generated and is used to 
+        #normalise the individual. 
         Random_Sum = 0
-        for i in range(number_of_states):
+        for i in range(params.number_of_states):
             #here the first generation is made randomly 
             chance = rn.randint(0,100)
-            if chance <= zero_chance:
+            if chance <= params.zeros:
         
                 RandomFloat = 0.0000000001
             else:
@@ -260,7 +338,7 @@ def First_Gen(Sim_number_iteration, pop_size):
         #note here we normalise the vector so all the elements sum to 1 but this is the only 
         #time it is done. Later the random numbers are taken and they are normalised in
         #the fitness function when we compute the shifts in Computed_shifts
-        for i in range(number_of_states):
+        for i in range(params.number_of_states):
             normalised_state_pop =  np.divide(WorkingRandomList[i],Random_Sum)
             NormalisedList.append(normalised_state_pop)
         
@@ -305,14 +383,14 @@ def Computed_shifts(individuals, rotamer_shifts): #not right yet
             working_element = np.divide(current_individual[i], element_sum)
             current_individual_norm.append(working_element)
                     
-        for sidechain_Carbon in Side_chain_carbons:
+        for sidechain_Carbon in params.Side_chain_carbons:
             totalShift = 0
             
-            for i in range(len(usedCC)):
+            for i in range(len(params.usedCC)):
                 current_state_shift = 0.0
                 #print rotamer_shifts[sidechain_Carbon, str(usedCC[i][0]), str(usedCC[i][1])]
                 
-                current_state_shift =  float(current_individual_norm[i]) * float(rotamer_shifts[sidechain_Carbon, str(usedCC[i][0]), str(usedCC[i][1])])
+                current_state_shift =  float(current_individual_norm[i]) * float(rotamer_shifts[sidechain_Carbon, str(params.usedCC[i][0]), str(params.usedCC[i][1])])
                 totalShift = totalShift + current_state_shift
 
 
@@ -325,7 +403,7 @@ def Computed_shifts(individuals, rotamer_shifts): #not right yet
 
     return Shifts
       
-def Distance(computed, observed,dist_func):
+def Distance(computed, observed,params):
     '''here we produce a set of Euclidian distances between the set of shifts for each population member and 
     the observed chemical shift this is written to a dictionary
     
@@ -347,19 +425,19 @@ def Distance(computed, observed,dist_func):
     distance = {}
 
     for individual in computed: 
-        args=(individual,observed,computed)
-        distance[individual] = dist_func(*args)
+        #args=(individual,observed,computed)
+        distance[individual] = params.disMeasure(individual,observed,computed,params)
     
     return distance
 
-def Euclid_dis(individual,observed,computed):
+def Euclid_dis(individual,observed,computed,params):
     distance_sum = 0
-    for carbon in range(len(Side_chain_carbons)):
-        if observed[Side_chain_carbons[carbon]] != "none":
+    for carbon in range(len(params.Side_chain_carbons)):
+        if observed[params.Side_chain_carbons[carbon]] != "none":
                 
             #this bit is just the sum for the distance over many lines
             a = float(computed[individual][carbon])
-            b =  float(observed[Side_chain_carbons[carbon]])
+            b =  float(observed[params.Side_chain_carbons[carbon]])
             c = (a - b)
             d = c**2
             distance_sum = distance_sum+ d
@@ -445,8 +523,9 @@ def reciprocal(dict, previous_gen):
         Recip[key] = c
     return Recip
 
-def select_parents(daughter_generation, probabilities, pop_size):
+def select_parents(daughter_generation, probabilities, params):
     
+
     '''This function aims to produce a list of 'parent couples' which are 
     then crossed over to make each individual
     
@@ -460,13 +539,13 @@ def select_parents(daughter_generation, probabilities, pop_size):
     parent_list = []
     
     #this is used to do the weighted PDF 
-    for i in range(pop_size):
+    for i in range(params.pop_size):
     
         sum = sum + probabilities[i]
         accumulated_reciprocals.append(sum)
     
-    for indiv in range(pop_size):
-        parent_selector = rn.uniform(0.0, accumulated_reciprocals[pop_size-1])
+    for indiv in range(params.pop_size):
+        parent_selector = rn.uniform(0.0, accumulated_reciprocals[params.pop_size-1])
         counting_along_for_parent = -1
         
         
@@ -481,7 +560,7 @@ def select_parents(daughter_generation, probabilities, pop_size):
         
         #here we make sure the two parents are not the same
         while parent_2 == parent_1:
-            parent_selector = rn.uniform(0.0, accumulated_reciprocals[pop_size-1])
+            parent_selector = rn.uniform(0.0, accumulated_reciprocals[params.pop_size-1])
             counting_along_for_parent = -1
             for i in range(len(accumulated_reciprocals)):
                 if parent_selector <= float(accumulated_reciprocals[i]):
@@ -491,8 +570,8 @@ def select_parents(daughter_generation, probabilities, pop_size):
         parent_list.append([parent_1, parent_2])
     return parent_list
                 
-def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shifts, Mutation_rate,func):
-    
+def mate_and_mutate(parent_list, parent_generation, MeanResults, Measured_shifts, params):
+    #mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, Mutation_rate,func) 
     ''' the aim of this function is to take the list of 'parents couples' and produce the 
     new individual from each couple'''
     
@@ -500,7 +579,9 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
 
     new_generation = {}
     individual_counter = 0
-    
+    number_of_states = params.number_of_states
+
+
     #here we use a single break point which is randomly chosen
     for parent in parent_list:
 
@@ -508,16 +589,16 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
         break_point = rn.randint(0,number_of_states-1)
         for i in range(number_of_states):
             if i <= break_point: 
-                current_individual.append(daughter_generation[parent[0]][i])
+                current_individual.append(parent_generation[parent[0]][i])
             else: 
-                current_individual.append(daughter_generation[parent[1]][i])
+                current_individual.append(parent_generation[parent[1]][i])
             
         sum = 0
         current_individual_2 = []
         
         #here is where the mutation occurs
         mutation_deicder = rn.uniform(0,99)
-        if mutation_deicder <= Mutation_rate:
+        if mutation_deicder <= params.Mutation_rate:
             
             state_decider = rn.randint(0, number_of_states-1)
             current_individual[state_decider] = rn.uniform(0,1)
@@ -526,12 +607,12 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
         #here if the new individual is less fit than one of the parents we take the 
         #most fit parent
         family = {}
-        family[0] = daughter_generation[parent[0]]
-        family[1] = daughter_generation[parent[1]]
+        family[0] = parent_generation[parent[0]]
+        family[1] = parent_generation[parent[1]]
         family[2] = current_individual
 
         family_shifts = Computed_shifts(family,  MeanResults)     
-        family_distances = Distance(family_shifts, Measured_shifts,func)
+        family_distances = Distance(family_shifts, Measured_shifts,params)
         
         Shortest_distance_in_family = 1000
         family_member = 4
@@ -546,9 +627,11 @@ def mate_and_mutate(parent_list, daughter_generation, MeanResults, Measured_shif
         
     return new_generation
 
-def Write_out(gen_number, populaton_dict, sim_number, dict_type, write_out, pop_size, out_dir):
-    
-    if write_out == 0:
+def Write_out(gen_number, populaton_dict, sim_number, dict_type, params):
+        
+    out_direc = params.write_out_location
+
+    if params.write_gen == 0:
         return None
         
     try:
@@ -564,7 +647,7 @@ def Write_out(gen_number, populaton_dict, sim_number, dict_type, write_out, pop_
     dir_name = out_dir+str(dict_type)+'/Simulation_'+str(sim_number)+'/gen_'+str(gen_number)+'.txt'
     file = open(dir_name,'w')
     
-    for i in range(pop_size):
+    for i in range(params.pop_size):
         file.write(str(i)+'  ')
         try: 
             for index in range(len(populaton_dict[i])):
@@ -575,8 +658,8 @@ def Write_out(gen_number, populaton_dict, sim_number, dict_type, write_out, pop_
             file.write(str(populaton_dict[i])+ '\n')
     file.close() 
         
-def Simulation_end_conditions(gen_counter, max_generations, Close_enough_to_measured, distances):
-    
+def Simulation_end_conditions(gen_counter, distances, params):
+    #Simulation_end_conditions(generation_Counter, Max_gen_number, Close_enough_to_measured, distances)
 
     
     #find the smallest distance
@@ -586,11 +669,11 @@ def Simulation_end_conditions(gen_counter, max_generations, Close_enough_to_meas
             smallest = distances[item]
 
     #give a maximum length to the number of generations 
-    if gen_counter == max_generations:
+    if gen_counter == params.Max_gen_number:
         output = 1  
         
     #the cut off for when things are 'equal'
-    elif smallest <= Close_enough_to_measured:
+    elif smallest <= params.Close_enough_to_measured:
         output = 1
     else: 
         output = 0
@@ -600,10 +683,12 @@ def Simulation_end_conditions(gen_counter, max_generations, Close_enough_to_meas
     #generations
     return output
 
-def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Measured_CS): 
-    
+def Wite_solutions(best_indiv_id, final_gen, Mean_CS,Measured_CS,params): 
+    #Wite_solutions(best_individual, Parent_Generation, out_direc, sol_name, Mean_CS,func,Measured_CS)
+
+
     #here we write out the populations
-    out_name = out_dir+sol_name
+    out_name = params.write_out_location+params.sol_name
     print 'outname:  ', out_name
     S_file = open(out_name, 'a')
     
@@ -634,12 +719,12 @@ def Wite_solutions(best_indiv_id, final_gen, out_dir, sol_name, Mean_CS,func,Mea
     
     #write out the chemical shift
     print closest_shifts
-    for atom, cs in zip(Side_chain_carbons, closest_shifts['dummy']):
+    for atom, cs in zip(params.Side_chain_carbons, closest_shifts['dummy']):
         bestIndiv.write('%s   %s\n'% (atom, cs))
 
 
     #calculate the distance
-    distance = Distance(closest_shifts, Measured_CS,func)
+    distance = Distance(closest_shifts, Measured_CS,params)
     
     bestIndiv.write('Distance: %f' % (distance['dummy']))
     bestIndiv.close()
@@ -759,87 +844,87 @@ def set_up(Mean_CS_file,  Measured_CS_file, sec_struct):
 def algo(Mean_CS, Measured_CS, params): 
     
     #setting up input params
-    global verbose_text
-    verbose_text = params.verbose
+    #global verbose_text
+    #verbose_text = params.verbose
    
-    global verbose
-    verbose = params.verbose
+    #global verbose
+    #verbose = params.verbose
     
-    global write_gen 
-    write_gen = params.write_gen
+    #global write_gen 
+    #write_gen = params.write_gen
     
-    global zero_chance
-    zero_chance = params.zeros
+    # # global zero_chance
+    # zero_chance = params.zeros
     
-    global usedCC
-    usedCC = params.usedCC
+    # global usedCC
+    # usedCC = params.usedCC
 
-    global cList
-    cList = params.cList
+    # global cList
+    # cList = params.cList
     
-    global Side_chain_carbons
-    Side_chain_carbons = params.Side_chain_carbons
+    # global Side_chain_carbons
+    # Side_chain_carbons = params.Side_chain_carbons
 
-    global pop_size
-    pop_size = params.popSize
+    # global pop_size
+    # pop_size = params.pop_size
     
-    global Mutation_rate
-    Mutation_rate = params.Mutation_rate
+    # global Mutation_rate
+    # Mutation_rate = params.Mutation_rate
     
-    global number_of_states
-    number_of_states = len(usedCC)
+    # global number_of_states
+    # number_of_states = len(usedCC)
     
-    global out_direc
-    out_direc = params.write_out_location
+    # global out_direc
+    # out_direc = params.write_out_location
     
-    global func
-    func = params.disMeasure
+    # global func
+    # func = params.disMeasure
     
-    global number_of_simulations
-    number_of_simulations = 1
+    # global number_of_simulations
+    # number_of_simulations = 1
     
-    global Max_gen_number
-    Max_gen_number = params.Max_gen_number
+    # global Max_gen_number
+    # Max_gen_number = params.Max_gen_number
     
-    global sol_name
-    sol_name = params.sol_name
+    # global sol_name
+    # sol_name = params.sol_name
 
-    print 'Max gen number: ' , Max_gen_number
-    print 'population size: ', pop_size
+    print 'Max gen number: ' , params.Max_gen_number
+    print 'population size: ', params.pop_size
 
     try:
-        os.mkdir( out_direc )
+        os.mkdir( params.write_out_location )
     except OSError:
         print 'directory already exists'
     
-    if verbose == '1':
+    if params.verbose == '1':
         print '''#====================================================================
 #starting ...
 #===================================================================='''
 
     
-    print 'using %s to drive the fitness function' %(func.__name__)
+    print 'using %s to drive the fitness function' %(params.disMeasure.__name__)
     initial_pop = {}             #starting population
     
-    for i in range(number_of_simulations):
+    for i in range(params.number_of_simulations):
      
         #the first gen is produced randomly
-        Generation_1 = First_Gen(i, pop_size) 
+        Generation_1 = First_Gen(i, params) 
         
-        Write_out(1,Generation_1, i, 'Generations', write_gen, pop_size, out_direc)
+        Write_out(1,Generation_1, i, 'Generations', params)
     
         #now we work out the shifts 
         indiv_shifts = Computed_shifts(Generation_1,  Mean_CS)
     
         #these are the distances bewteen the generated shifts and the observed shifts 
-        distances = Distance(indiv_shifts, Measured_CS,func)
-        Write_out(1, distances, i, 'Distances', write_gen, pop_size, out_direc)
+        distances = Distance(indiv_shifts, Measured_CS,params)
+        Write_out(1, distances, i, 'Distances', params)
     
         #this is used to make the probabilities 
         recpirical = reciprocal(distances, Generation_1)    
     
         #a list of the 'parent couples'
-        parents = select_parents(Generation_1, recpirical, pop_size)
+        parents = select_parents(Generation_1, recpirical, params)
     
         #this line is just for keeping the names the same 
         Parent_Generation = Generation_1.copy()
@@ -851,17 +936,17 @@ def algo(Mean_CS, Measured_CS, params):
         
             generation_Counter = generation_Counter + 1
             
-            if verbose == '1':
+            if params.verbose == '1':
                 div_by_50 =  generation_Counter % 10
                 if div_by_50 == 0: 
                     print generation_Counter
         
             #Here we make the new generation
             new_gen = {}
-            new_gen = mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, Mutation_rate,func) 
+            new_gen = mate_and_mutate(parents, Parent_Generation, Mean_CS, Measured_CS, params) 
         
         
-            Write_out(generation_Counter, new_gen, i, 'Generations', write_gen, pop_size, out_direc)
+            Write_out(generation_Counter, new_gen, i, 'Generations', params)
         
             #work out the shifts and the distances
         
@@ -869,20 +954,20 @@ def algo(Mean_CS, Measured_CS, params):
             indiv_shifts = Computed_shifts(new_gen,  Mean_CS)
         
             distances = {}
-            distances = Distance(indiv_shifts, Measured_CS,func)
-            Write_out(generation_Counter, distances, i, 'Distances', write_gen, pop_size, out_direc)
+            distances = Distance(indiv_shifts, Measured_CS,params)
+            Write_out(generation_Counter, distances, i, 'Distances', params)
     
             #do the reciprocal
             recpirical = reciprocal(distances,new_gen)    
      
             #a list of the 'parent couples'
             parents = {}
-            parents = select_parents(Parent_Generation, recpirical, pop_size)
+            parents = select_parents(Parent_Generation, recpirical, params)
     
             Parent_Generation = {}
             Parent_Generation = new_gen.copy()
         
-            end_of_sim = Simulation_end_conditions(generation_Counter, Max_gen_number, Close_enough_to_measured, distances)
+            end_of_sim = Simulation_end_conditions(generation_Counter, distances,params)
     
         #so here we wite out the best individual in the last generation to solutions
         #I guess we could also look for the best solution in all the generations but this might late longer
@@ -894,7 +979,7 @@ def algo(Mean_CS, Measured_CS, params):
                 shortest_distance = distances[item]
                 best_individual = item
         
-        Wite_solutions(best_individual, Parent_Generation, out_direc, sol_name, Mean_CS,func,Measured_CS)
+        Wite_solutions(best_individual, Parent_Generation, Mean_CS,Measured_CS,params)
     
     #print 'coffee time is over!' 
     #print '==================='
@@ -904,11 +989,26 @@ def algo(Mean_CS, Measured_CS, params):
 
 if __name__ == '__main__':
     
-    params = ReadInputFile('InputFile.txt')
+    #====================================================================
+    # Arguments
+    #====================================================================
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description, epilog=" ")
+    parser.add_argument("-f", type=str, default='InputFile.txt',help="configuration file containing the algorithm configuration")    
+
+    args = parser.parse_args()
+    config_file = args.f
+
+    #====================================================================
+    # Run the program
+    #====================================================================
+
+
+
+    params = ReadInputFile(config_file)
     calRes = params.calcRes
     expshifts = params.expShifts
-    
-    dist_func = Euclid_dis
+
     #print 'using '+ str(dist_func.__name__)
     #average_CS, experimental_CS = set_up(calRes,  expshifts,'R')
     #algo(Mean_CS,   Measured_CS,     write_gen, pop_size,        Mutation_rate,        number_of_simulations,        verbose,      Max_gen_number, )
