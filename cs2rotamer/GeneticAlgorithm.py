@@ -280,10 +280,7 @@ def algo(Mean_CS, Measured_CS, params):
     except OSError:
         print 'directory already exists'
     
-    if params.verbose == '1':
-        print '''#====================================================================
-#starting ...
-#===================================================================='''
+    print '====//==== starting ====//===='
 
     #smallest distance log
     if params.writeDistance != None:
@@ -368,8 +365,9 @@ def algo(Mean_CS, Measured_CS, params):
 
         best_individual, dist =  distFuncs.get_smallest_distance(distances)
         
+        print '====//==== finishing ====//===='
+
         IO.Wite_solutions(best_individual, Parent_Generation, Mean_CS,Measured_CS,params)
-        
         if params.writeDistance != None:
             IO.write_smallest_distances(smallest_dist_in_generations, params)
 
