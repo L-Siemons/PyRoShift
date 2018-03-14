@@ -111,20 +111,25 @@ def select_parents(daughter_generation, probabilities, params):
     parent_list = []
     
     #this is used to do the weighted PDF 
-    for i in range(params.pop_size):
+    for i in probabilities:
     
-        sum = sum + probabilities[i]
+        sum = sum + i
         accumulated_reciprocals.append(sum)
     
     for indiv in range(params.pop_size):
         parent_selector = rn.uniform(0.0, accumulated_reciprocals[params.pop_size-1])
-        counting_along_for_parent = -1
+        counting_along_for_parent = 0
         
         
         #so here we select a parent. The probability is represented by the size of the gaps
-        for i in range(len(accumulated_reciprocals)):
-            if parent_selector <= float(accumulated_reciprocals[i]):
-                counting_along_for_parent = counting_along_for_parent + 1
+        
+        for i in accumulated_reciprocals:
+            #print counting_along_for_parent
+            if parent_selector >= float(i):
+                counting_along_for_parent = counting_along_for_parent+1           
+            else:
+            	break
+
         parent_1 = counting_along_for_parent
         
         #temporary - moved by the while statement ... just saves lines 
@@ -133,13 +138,16 @@ def select_parents(daughter_generation, probabilities, params):
         #here we make sure the two parents are not the same
         while parent_2 == parent_1:
             parent_selector = rn.uniform(0.0, accumulated_reciprocals[params.pop_size-1])
-            counting_along_for_parent = -1
-            for i in range(len(accumulated_reciprocals)):
-                if parent_selector <= float(accumulated_reciprocals[i]):
+            counting_along_for_parent = 0 
+            for i in accumulated_reciprocals:
+                if parent_selector >= i:
                     counting_along_for_parent = counting_along_for_parent + 1
+                else:
+                	break
             parent_2 = counting_along_for_parent
 
         parent_list.append([parent_1, parent_2])
+
     return parent_list
                 
 def mate_and_mutate(parent_list, parent_generation, MeanResults, Measured_shifts, params):
