@@ -208,7 +208,7 @@ def Wite_solutions(best_indiv_id, final_gen, Mean_CS,Measured_CS,params):
     S_file.close()
     
     #the file for the best individual to be written to
-    best_indiv_name = out_name + '_bestIndiv.txt'
+    best_indiv_name = out_name.split('.')[0] + '_bestIndiv.txt'
     
     #this is just some reformatting so we can use Computed_shifts()
     dummyDict = {}
@@ -217,12 +217,19 @@ def Wite_solutions(best_indiv_id, final_gen, Mean_CS,Measured_CS,params):
     #calculate the chemical shift
     closest_shifts = cs.Computed_shifts(dummyDict, Mean_CS,params)
     
-    print 'best f name: ', best_indiv_name
-    print 'cs' , closest_shifts
+    print 'File with best individual: ', best_indiv_name
+    print 'Calculated populations:'
+    for i,j in zip(params.usedCC,dummyDict['dummy']): 
+        name = ''.join(i)
+        print '%4s: %0.3f' % (name,j)
+
+    print 'Best chemical shifts:'
+    for i in closest_shifts['dummy']:
+        print i
+
     bestIndiv = open(best_indiv_name, 'w')
     
     #write out the chemical shift
-    print closest_shifts
     for atom, chemicalShift in zip(params.Side_chain_carbons, closest_shifts['dummy']):
         bestIndiv.write('%s   %s\n'% (atom, chemicalShift))
 
