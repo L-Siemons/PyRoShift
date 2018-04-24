@@ -1,11 +1,16 @@
-                          Shifts2PopsPy
+
+
+  ========== // ========== ========= ========== // ========== 
+  ========== // ========== PyRoShift ========== // ========== 
+  ========== // ========== ========= ========== // ========== 
+
 
 
   What is it?
   -----------
 
-  This program calculates rotamer populations from carbon 
-  chemical shifts. This is implimented for the following residues: 
+  This program calculates protein side chain rotamer populations from carbon 
+  chemical shifts. This is implemented for the following residues: 
 
   - isoleucine
 
@@ -18,61 +23,62 @@
 
   Our bench mark shows that the calculation of rotamer populations 
   is most accurate when all the carbon chemical shifts are provided 
-  as this allows an acutate calculation for the following states: 
+  as this allows an actuate calculation for the following states: 
 
   t/t, t/p,m/m,p/t,m/t
 
-  However we also noted that if the C delta is provided then we are able 
-  to sum these states to obtain the rotamer populations for chi 2 
-  independant of chi1. 
+  Note; 
+  t = trans 
+  m = gauche - 
+  p = gauche + 
 
-  Note that if the following
+  However we also noted that if only the C delta is provided then we are able 
+  to obtain the population of the m/m state. If not all the chemical shifts 
+  are provided then then calculating the rotamer populations for chi1 is not advised.
 
-  C alpha 
-  C beta 
-  C gamma1 
-  C gamma2 
 
-  are not provided then the rotamer populations for chi1 are unreliable. 
+  Installation
+  ------------
 
+  On Linux and Mac one can install the module as with any other module using 
+  
+  $ python setup.py build
+  $ python setup.py install
+
+  or 
+
+  pip install .
+  
 
   How to use
   -----------
   
   To use this program: 
   
-  1)  Place the following into the working directory: 
-          - Input.txt 
-          - Master_2.py 
-          - File containing the theoretical chemical shifts. 
+  1)  An example of a working directory is shown in exmapleRun/
+      This folder contains: 
+      	- InputFile.txt
+      		- contains the parameters
+      	- Measured_shifts.txt
+      		- lists the measured chemical shifts
+      	- RunCs2Rotamer.py
+      		- a script that executes the method
 
-  2)  Modify the file containing the experimentally observed 
-      chemical shifts. This File is called 'Measured_shifts.txt'
-      by defult. 
+  2) To Run the program one simply executes RunCs2Rotamer.py
+     For future use this can be moved to somewhere in the executable path if desired. 
 
-  3)  Configure the values in InputFile.txt. The defult values are
-      the ones that were used during the bench mark. We suggest using these. 
-      However if one sees that the distances between the best individual 
-      and the experimental chemical shifts then it would be appropriate to 
-      terminate the algorithm.
-
-  4)  To run the algorithm simply execute the python script Master_2.py 
-      in Mac/Linux enviroments this can be done as follows: 
-
-      ./Master_2.py
-      python Master_2.py
-
+  3) To use one's own data one can simply edit the Measured_shifts.txt file and the
+     configurations in InputFile.txt. Note the that configurations in InputFile.txt
+     are the ones used in our bench mark and the ones we suggest using.
 
 
   Configurations
   -----------
-  
-  The File names Input.txt contians the configuration for the Genetic algorithm. 
-  This section cantains a description of the configuration options in this file and
-  the defult options which were used to bench mark the algorithm will be indictaed by *. 
+  The File names Input.txt contains the configuration for the Genetic algorithm. 
+  This section contains a description of the configuration options in this file and
+  the default options which were used to bench mark the algorithm will be indicated by * . 
   Changing these options is likely to affect the performance of the algorithm and so should
-  be done with care. 
-
+  be done with ca
   Settings: 
 
   dist_func*             Euclid_dis      Distance function that drives the GA
@@ -108,5 +114,4 @@
   This program was written by Lucas Siemons.
 
   This work was carried out in collaboration with 
-  Dr Flemming Hansen 
-  Ruth Dingle
+  Dr Flemming Hansen
