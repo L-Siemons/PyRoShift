@@ -51,7 +51,7 @@ def Computed_shifts(individuals, rotamer_shifts ,params):
                 current_state_shift = 0.0
                 pop = float(current_individual_norm[i])
 
-                key = tuple([sidechain_Carbon] + params.usedCC[i])
+                key = tuple([sidechain_Carbon[i]] + params.usedCC[i])
                 state_shift = float(rotamer_shifts[key])
                 current_state_shift = pop * state_shift
                 totalShift = totalShift + current_state_shift
@@ -61,5 +61,7 @@ def Computed_shifts(individuals, rotamer_shifts ,params):
             side_chain_shifts_counter = side_chain_shifts_counter + 1
 
         Shifts[key] = side_chain_shifts
+
+    print Shifts
 
     return Shifts

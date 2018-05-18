@@ -116,7 +116,7 @@ class ReadInputFile:
                         self.number_of_states = len(self.usedCC)
                     
                     elif resLabel == 'VAL':
-                        self.usedCC = [['p'], ['t'],['m']]
+                        self.usedCC = [['p'],['t'],['m']]
                         self.cList = ['1','2']
                         self.Side_chain_carbons = ['1','2']
                         self.number_of_states = len(self.usedCC)                    	

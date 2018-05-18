@@ -28,7 +28,8 @@ def Euclid_dis(observed,computed,params):
     '''
     
     distance_sum = 0
-    for carbon in range(params.number_of_states):
+    for carbon in range(len(params.Side_chain_carbons)):
+
         if observed[params.Side_chain_carbons[carbon]] != "none":
                 
             #this bit is just the sum for the distance over many lines
@@ -88,6 +89,7 @@ def reciprocal(dict):
     =======
     recip : dictionary
     '''
+
     recip = {}
     for key in dict: 
         a = np.divide(1,(dict[key]))

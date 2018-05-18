@@ -301,21 +301,20 @@ def algo(Mean_CS, Measured_CS, params):
      
         #the first gen is produced randomly
         Generation_1 = First_Gen(i, params) 
-        
+
+
         IO.Write_out(1,Generation_1, i, 'Generations', params)
     
         #now we work out the shifts 
         indiv_shifts = cs.Computed_shifts(Generation_1,  Mean_CS,params)
-    
+
         #these are the distances bewteen the generated shifts and the observed shifts 
         
-
         distances = distFuncs.Distance(indiv_shifts, Measured_CS,params)
         IO.Write_out(1, distances, i, 'Distances', params)
     
         #this is used to make the probabilities 
         recpirical = distFuncs.reciprocal(distances)    
-    
         #a list of the 'parent couples'
         parents = select_parents(Generation_1, recpirical, params)
     
