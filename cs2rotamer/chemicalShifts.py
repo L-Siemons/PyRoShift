@@ -6,7 +6,7 @@ shifts.
 
 import numpy as np
 
-def Computed_shifts(individuals, rotamer_shifts,params): 
+def Computed_shifts(individuals, rotamer_shifts ,params): 
 
     '''
     
@@ -50,7 +50,9 @@ def Computed_shifts(individuals, rotamer_shifts,params):
             for i in range(params.number_of_states):
                 current_state_shift = 0.0
                 pop = float(current_individual_norm[i])
-                state_shift = float(rotamer_shifts[sidechain_Carbon, params.usedCC[i][0], params.usedCC[i][1]])
+
+                key = tuple([sidechain_Carbon] + params.usedCC[i])
+                state_shift = float(rotamer_shifts[key])
                 current_state_shift = pop * state_shift
                 totalShift = totalShift + current_state_shift
 

@@ -77,7 +77,7 @@ def setup_Fitted_DFT(Mean_CS_file,  Measured_CS_file, sec_struct,params, read_me
     for line in dft.readlines():
         split = line.split()
         angles = list(split[1])
-        
+        print angles
         for indx,atom in enumerate(params.Side_chain_carbons):
             keys = tuple([atom] + angles)
 
@@ -86,11 +86,9 @@ def setup_Fitted_DFT(Mean_CS_file,  Measured_CS_file, sec_struct,params, read_me
                 if angles in usedCC:
                     alphaDFT[keys] = float(split[2+indx])
 
-
             if split[0] == 'beta':
                 if angles in usedCC:
                     betaDFT[keys] = float(split[2+indx])
-
 
             if split[0] == 'rCoil':
                 if angles in usedCC:
