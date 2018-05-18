@@ -321,8 +321,6 @@ def algo(Mean_CS, Measured_CS, params):
         #this line is just for keeping the names the same 
         Parent_Generation = Generation_1.copy()
 
-
-
         generation_Counter = 1
     
         end_of_sim = 0
