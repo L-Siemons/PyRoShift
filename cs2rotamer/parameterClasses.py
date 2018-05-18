@@ -104,13 +104,24 @@ class ReadInputFile:
                     self.write_out_location = split[1]
                 
                 if split[0] == 'residue':
-                    if split[1] == 'ILE':
+                    resLabel = split[1].upper()
+                    if resLabel == 'ILE':
                         #self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
                         self.usedCC = [['t','t'], ['t','p'],['m','m'],['p','t'],['m','t']]
                         self.cList = ['1','2','4','5','6','8','10','12','24']
                         self.Side_chain_carbons = ['4','5', '6','12','24']
                         self.number_of_states = len(self.usedCC)
-                
+                    
+                    elif resLabel == 'VAL':
+                        self.usedCC = [['p'], ['t'],['m']]
+                        self.cList = ['1','2']
+                        self.Side_chain_carbons = ['1','2']
+                        self.number_of_states = len(self.usedCC)                    	
+
+                    else:
+                    	raise Exception('Residue Label in input file is not recognized')
+
+
                 if split[0] == 'CalcRes':
 
                     if  split[1].lower() == 'default':
