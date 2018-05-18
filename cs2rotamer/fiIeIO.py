@@ -76,33 +76,26 @@ def setup_Fitted_DFT(Mean_CS_file,  Measured_CS_file, sec_struct,params, read_me
     
     for line in dft.readlines():
         split = line.split()
-        #print line
-        if split[0] == 'alpha':
-            angles = [split[1][0], split[1][1]]
-            if angles in usedCC:
-                alphaDFT['4', angles[0], angles[1]] = float(split[2])
-                alphaDFT['5', angles[0], angles[1]] = float(split[3])
-                alphaDFT['6', angles[0], angles[1]] = float(split[4])
-                alphaDFT['12', angles[0], angles[1]] = float(split[5])
-                alphaDFT['24', angles[0], angles[1]] = float(split[6])
+        angles = list(split[1])
+        
+        for indx,atom in enumerate(params.Side_chain_carbons):
+            keys = tuple([atom] + angles)
 
-        if split[0] == 'beta':
-            angles = [split[1][0], split[1][1]]
-            if angles in usedCC:
-                betaDFT['4', angles[0], angles[1]] = float(split[2])
-                betaDFT['5', angles[0], angles[1]] = float(split[3])
-                betaDFT['6', angles[0], angles[1]] = float(split[4])
-                betaDFT['12', angles[0], angles[1]] = float(split[5])
-                betaDFT['24', angles[0], angles[1]] = float(split[6])
+            if split[0] == 'alpha':
+ 
+                if angles in usedCC:
+                    alphaDFT[keys] = float(split[2+indx])
 
-        if split[0] == 'rCoil':
-            angles = [split[1][0], split[1][1]]
-            if angles in usedCC:
-                rcDFT['4', angles[0], angles[1]] = float(split[2])
-                rcDFT['5', angles[0], angles[1]] = float(split[3])
-                rcDFT['6', angles[0], angles[1]] = float(split[4])
-                rcDFT['12', angles[0], angles[1]] = float(split[5])
-                rcDFT['24', angles[0], angles[1]] = float(split[6])
+
+            if split[0] == 'beta':
+                if angles in usedCC:
+                    betaDFT[keys] = float(split[2+indx])
+
+
+            if split[0] == 'rCoil':
+                if angles in usedCC:
+                    rcDFT[keys] = float(split[2+indx])
+
 
     dft.close()
 

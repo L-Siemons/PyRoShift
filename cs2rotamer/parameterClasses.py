@@ -109,6 +109,9 @@ class ReadInputFile:
                         #self.usedCC = [[-175,167],[-167,65],[-58,-60],[60,174], [-64,169]]
                         self.usedCC = [['t','t'], ['t','p'],['m','m'],['p','t'],['m','t']]
                         self.cList = ['1','2','4','5','6','8','10','12','24']
+
+                        #this list must be the same order as the file containing the chemical 
+                        #shifts
                         self.Side_chain_carbons = ['4','5', '6','12','24']
                         self.number_of_states = len(self.usedCC)
                     
@@ -125,7 +128,7 @@ class ReadInputFile:
                 if split[0] == 'CalcRes':
 
                     if  split[1].lower() == 'default':
-                        self.calcRes =os.path.join(os.path.dirname(__file__),'resources/PdbFittedChemicalShifts.dat') 
+                        self.calcRes=os.path.join(os.path.dirname(__file__),'resources/PdbFittedChemicalShifts.dat') 
                     else:    
                         self.calcRes = split[1]
                     
