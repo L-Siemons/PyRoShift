@@ -25,12 +25,9 @@ if __name__ == '__main__':
     calRes = params.calcRes
     expshifts = params.expShifts
     experimental_CS, SSE = c.ReadIn_measured_C_shifts(params.expShifts)
-    average_CS = c.setup_Fitted_DFT(calRes,SSE, params)
+    dft_CS = c.setup_Fitted_DFT(calRes,SSE, params)
 
     start = time.time()
-    c.algo(average_CS, experimental_CS, params)
+    c.algo(dft_CS, experimental_CS, params)
     end = time.time()
-    print 'time taken: ', end - start
-
-
-
+    print 'time taken: ', end-start
