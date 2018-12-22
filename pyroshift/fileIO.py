@@ -74,11 +74,16 @@ class Input(file):
         Read in the lines and make
         '''
 
+        sse_map = {}
+        sse_map['a'] = 'alpha'
+        sse_map['b'] = 'beta'
+        sse_map['r'] = 'coil'
+
         self.sse = {}
         self.shifts = {}
         self.opts = []
         self.shift_matrix = {}
-        self.state_order = []
+        self.state_order = {}
 
         f = open(shift_file)
         for line in f.readlines():
@@ -91,7 +96,7 @@ class Input(file):
                 atom = s[1].lower()
                 if atom == 'ca':
                     current_sse = s[3].lower()
-                    self.sse[res] = current_sse
+                    self.sse[res] = sse_map[current_sse]
 
                 if res not in self.shifts:
                     self.shifts[res] = {}
@@ -117,8 +122,11 @@ class Input(file):
             state = s[1]
             sse = s[0]
 
-            if state not in self.state_order:
-                self.state_order.append(state)
+            try:
+                if state not in self.state_order[sse]:
+                    self.state_order[sse].append(state)
+            except KeyError:
+                self.state_order[sse] = [state]
 
             if sse not in self.shift_matrix:
                 self.shift_matrix[sse] = []
