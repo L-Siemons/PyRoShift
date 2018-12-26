@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 descrip='''
      ====// cs2rotamer \\\\====
 
-This package looks to determine protien
+This package looks to determine protein
 side-chain rotamer populations from chemical
 shifts.
 
