@@ -71,7 +71,18 @@ class Input(file):
     def __init__(self, shift_file, shift_matrix='default', ref_opt_file='default'):
 
         '''
-        Read in the lines and make
+        Read in the input file and set up the correct attributes
+
+        Args:
+        =====
+        shift_file : str
+            - file containing the experimental observed 13C chemical shifts
+
+        shift_matrix : str
+            - file containing the chemical shifts for each state
+
+        ref_opt_file : str
+            - file containing the optimizations for the chemical shift matrix
         '''
 
         sse_map = {}
@@ -144,3 +155,83 @@ class Input(file):
             s = line.split()
             self.opts.append(np.array([float(a) for a in s[2:]]))
         ref_opts.close()
+
+class Output():
+    '''
+    This class contains functions for writing out the results from the
+    chemical shift calculations.
+
+    In general it is intended to be used as part of calculatePopulaions.isoleucine
+    and uses it's attribute isoleucine.populations
+
+    There are two output modes: print to screen and write to file
+
+    Attributes:
+    ===========
+    output_lines : list
+        - list of lines containing the populations and the relative error
+    '''
+
+    def __init__(self):
+        '''
+        Initialize the class
+        '''
+
+    def generate_lines(self,):
+        '''
+        This function compiles the results from the calculation
+        into a set of lines that can be written to a file or printed
+        '''
+
+        states = list(set(self.state_order['alpha']))
+        top_line = '# residue'  + '  ' + '  '.join(states)
+        lines = [top_line]
+
+        for res in self.populations:
+            top_line = '#'
+            sse = self.sse[res]
+            top_line = '#'  + '  ' + '  '.join(self.state_order[sse])
+            total_list = []
+
+            for pop in states:
+                val =  self.populations[res][pop][0]
+                err =  self.populations[res][pop][1]
+                total = '%0.3f+/-%0.3f' % (val, err)
+                total_list.append(total)
+
+            lines =lines + [res +  '    '+ '    '.join(total_list)]
+
+        self.output_lines = lines
+
+    def print_lines(self):
+        '''
+        prints the calculation results to stdout (terminal screen)
+        '''
+
+        #generate the lines if need be
+        if hasattr(self, 'output_lines') == False:
+            self.generate_lines()
+
+
+        for i in self.output_lines:
+            print i
+
+    def write_lines(self, file):
+        '''
+        writes the calculation results to a file
+
+        Args:
+        =====
+        file : str
+            - name of output file
+        '''
+
+        #generate the lines if need be
+        if hasattr(self, 'output_lines') == False:
+            self.generate_lines()
+
+        out = open(file, 'w')
+        for i in self.output_lines:
+            out.write(i)
+            out.write('\n')
+        out.close()
