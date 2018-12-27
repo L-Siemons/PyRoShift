@@ -25,12 +25,10 @@ setup(
     author='L. Siemons',
     author_email='zcbtla0@ucl.ac.uk',
     packages=find_packages(),
-    #scripts=[''],
-    #url='http://pypi.python.org/pypi/TowelStuff/',
     license='LICENSE.txt',
     description=descrip,
     long_description=open('README.md').read(),
     install_requires=['cython','numpy',],
-    package_data={'cs2rotamer': ['resources/*']},
+    package_data={'pyroshiftGA': ['resources/*']},
     ext_modules=cythonize('pyroshiftGA/*.pyx')
 )
