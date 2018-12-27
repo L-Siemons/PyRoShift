@@ -1,10 +1,11 @@
 #! /usr/bin/python
 # written by Lucas Siemons
 
-import cs2rotamer as c
+import pyroshiftGA as c
 import argparse
 import time
 
+print c.__file__
 
 if __name__ == '__main__':
 
