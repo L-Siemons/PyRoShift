@@ -200,32 +200,32 @@ def Wite_solutions(best_indiv_id, final_gen, Mean_CS, Measured_CS, params):
 
     #this is just some reformatting so we can use Computed_shifts()
     dummyDict = {}
-    dummyDict['dummy'] = final_gen[best_indiv_id]
+    dummyDict[0] = final_gen[best_indiv_id]
 
     #calculate the chemical shift
     closest_shifts = cs.Computed_shifts(dummyDict, Mean_CS, params)
 
     print 'File with best individual: ', best_indiv_name
     print 'Calculated populations:'
-    for i, j in zip(params.usedCC, dummyDict['dummy']):
+    for i, j in zip(params.usedCC, dummyDict[0]):
         name = ''.join(i)
         print '%4s: %0.3f' % (name, j)
 
     print 'Best chemical shifts:'
-    for i in closest_shifts['dummy']:
+    for i in closest_shifts[0]:
         print i
 
     bestIndiv = open(best_indiv_name, 'w')
 
     #write out the chemical shift
-    for atom, chemicalShift in zip(params.Side_chain_carbons, closest_shifts['dummy']):
+    for atom, chemicalShift in zip(params.Side_chain_carbons, closest_shifts[0]):
         bestIndiv.write('%s   %s\n'% (atom, chemicalShift))
 
 
     #calculate the distance
     distance = distFuncs.Distance(closest_shifts, Measured_CS, params)
 
-    bestIndiv.write('Distance: %f' % (distance['dummy']))
+    bestIndiv.write('Distance: %f' % (distance[0]))
     bestIndiv.close()
 
 def write_smallest_distances(smallest_dist_in_generations, params):
