@@ -77,11 +77,10 @@ def Distance(computed, observed,params):
                 and the measured chemical shifts
     '''
 
-    cdef int individual
-    distance = {}
+    distance = []
 
     for individual in computed:
-        distance[individual] = params.disMeasure(observed,computed[individual],params)
+        distance.append(params.disMeasure(observed, individual,params))
     return distance
 
 def reciprocal(dict):

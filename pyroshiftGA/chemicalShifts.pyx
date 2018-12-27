@@ -25,7 +25,7 @@ def Computed_shifts(individuals, rotamer_shifts, params):
         entry - list of chemical shifts
     '''
 
-    cdef int key
+
     cdef int side_chain_shifts_counter
     cdef float element_sum
     cdef int i
@@ -33,22 +33,22 @@ def Computed_shifts(individuals, rotamer_shifts, params):
     cdef str sidechain_Carbon
     cdef float current_state_shift
     cdef float state_shift
+    cdef int key
 
+    Shifts = [] #shifts given by each individual
 
-    Shifts = {} #shifts given by each individual
-
-    for key in individuals:
+    for key, entry in enumerate(individuals):
 
         #just in case mostly appeared in an attempt to debug
         side_chain_shifts = [0.] * params.number_of_states
         side_chain_shifts_counter = 0
 
         #so here i now need to normalsie the input vector so the sum of the elements is 1
-        element_sum = sum(individuals[key])
+        element_sum = sum(entry)
         current_individual_norm = []
 
         for i in range(params.number_of_states):
-            working_element = individuals[key][i]/element_sum
+            working_element = entry[i]/element_sum
             current_individual_norm.append(working_element)
 
         #calculate the chemical shifts as a weighted average
@@ -68,5 +68,5 @@ def Computed_shifts(individuals, rotamer_shifts, params):
             side_chain_shifts[side_chain_shifts_counter] = totalShift
             side_chain_shifts_counter = side_chain_shifts_counter + 1
 
-        Shifts[key] = side_chain_shifts
+        Shifts.append(side_chain_shifts)
     return Shifts

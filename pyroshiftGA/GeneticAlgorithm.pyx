@@ -56,7 +56,7 @@ def First_Gen(Sim_number_iteration, params):
     NormalisedList = []
 
 
-    individuals = {}
+    individuals = []
 
     for indiv in range(params.pop_size):
 
@@ -84,7 +84,7 @@ def First_Gen(Sim_number_iteration, params):
             normalised_state_pop =  np.divide(WorkingRandomList[i],Random_Sum)
             NormalisedList.append(normalised_state_pop)
 
-        individuals[indiv] = NormalisedList
+        individuals.append(NormalisedList)
     return individuals
 
 def select_parents(daughter_generation, probabilities, params):
@@ -120,11 +120,13 @@ def select_parents(daughter_generation, probabilities, params):
 
     #this is used to do the weighted PDF
 
+    print probabilities
     for i in probabilities:
 
         sum = sum + i
         accumulated_reciprocals.append(sum)
 
+    print params.pop_size
     for indiv in range(params.pop_size):
         parent_selector = rn.uniform(0.0, accumulated_reciprocals[params.pop_size-1])
         counting_along_for_parent = 0
