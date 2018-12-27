@@ -6,7 +6,7 @@ descrip='''
 
      ====// cs2rotamer \\\\====
 
-This package looks to determine protien
+This package looks to determine protein
 side-chain rotamer populations from chemical
 shifts.
 
@@ -30,7 +30,7 @@ setup(
     license='LICENSE.txt',
     description=descrip,
     long_description=open('README.md').read(),
-    #install_requires=['os','sys','random','numpy','time',],
+    install_requires=['cython','numpy',],
     package_data={'cs2rotamer': ['resources/*']},
     ext_modules=cythonize('pyroshiftGA/*.pyx')
 )

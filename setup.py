@@ -25,6 +25,6 @@ setup(
     license='LICENSE.txt',
     description=descrip,
     long_description=open('README.md').read(),
-    install_requires=['os','sys','random','numpy','time','scipy'],
+    install_requires=['numpy','scipy'],
     package_data={'pyroshift': ['resources/*']}
 )
