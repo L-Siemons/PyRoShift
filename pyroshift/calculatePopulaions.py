@@ -107,7 +107,9 @@ class Isoleucine(Input, Output):
         Returns:
         ========
         result.x : np.array
-            populations from the fit.s
+            populations from the fits
+        shifts : np array 
+        	contains the calculated chemical shifts 
         '''
         lb = np.zeros(5)
         ub = lb+1
@@ -116,7 +118,9 @@ class Isoleucine(Input, Output):
         args = [cs_vector, state_matrix]
 
         result = least_squares(self.resid, start_pops, bounds=(lb, ub), args=args)
-        return result.x
+        shifts = np.dot(result.x, state_matrix)
+
+        return result.x, shifts 
 
     def calc_pop_for_all_opts(self, state_matrix, cs_vector, sse):
         '''
@@ -136,23 +140,34 @@ class Isoleucine(Input, Output):
         ========
         pops_dict : dictionary
             keys are the states and entries are a tuple (value, std)
+        shifts_dict : dictionary
         '''
 
         pops_list = []
+        shift_list = []
         for opt in self.opts:
             current_shift_matrix = state_matrix + opt
-            pops = self.calc_pops(current_shift_matrix, cs_vector)
+            pops, shifts = self.calc_pops(current_shift_matrix, cs_vector)
             pops_list.append(pops)
+            shift_list.append(shifts)
 
         pops_list = np.array(pops_list).T
         pops_dict = {}
+
+        shift_list = np.array(shift_list).T
+        shifts_dict = {}
 
         for i, j in zip(pops_list, self.state_order[sse]):
             val = np.mean(i)
             std = np.std(i)
             pops_dict[j] = (val, std)
 
-        return pops_dict
+        for i, j in zip(shift_list, self.atoms):
+            val = np.mean(i)
+            std = np.std(i)
+            shifts_dict[j] = (val, std)
+         
+        return pops_dict, shifts_dict
 
     def calc_pops_for_all_residues(self, ):
         '''
@@ -166,7 +181,7 @@ class Isoleucine(Input, Output):
         - P is a vector containing the populations
         - C_exp is a vector with the experimental populations
 
-        This method defined self.populations
+        This method defines self.populations and self.calc_shifts 
 
         Returns:
         =======
@@ -179,6 +194,7 @@ class Isoleucine(Input, Output):
 
         print 'calculating the populations ...'
         pops = {}
+        calc_shifts = {}
         for residue in self.shifts:
 
             res_sse = self.sse[residue]
@@ -188,7 +204,13 @@ class Isoleucine(Input, Output):
             for i in self.atoms:
                 shifts.append(self.shifts[residue][i])
             shifts = np.array(shifts)
-            pops[residue] = self.calc_pop_for_all_opts(shift_matrix, shifts, res_sse)
+            current_pops, current_shifts = self.calc_pop_for_all_opts(shift_matrix, shifts, res_sse)
+            
+            pops[residue] = current_pops
+            calc_shifts[residue] = current_shifts
+
 
         self.populations = pops
+        self.calc_shifts = calc_shifts
+
         return pops

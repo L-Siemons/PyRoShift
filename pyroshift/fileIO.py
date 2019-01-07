@@ -235,3 +235,33 @@ class Output():
             out.write(i)
             out.write('\n')
         out.close()
+
+    def write_latex_pops(self, file):
+        '''
+        writes the populations into a latex table.
+        
+        Args:
+        =====
+        file : str
+            - name of output file
+        '''
+
+        map_ = {}
+        map_['m'] = 'g_{m}'
+        map_['t'] = 't'
+        map_['p'] = 'g_{p}'
+
+
+
+        latex_header = '\\begin{table}[th]\n\\centering\n\\begin{tabular}{|l |l |l |l |l |l |l |l  |l |l| }\n\\hline\n'
+        out = open(file,'w')
+        out.write(latex_header)
+
+        for i in self.output_lines:
+            i = i.lower().replace('ile', '')
+            j = i.replace('#', '')
+            k = ' & '.join(j.replace('+/-','\\pm' ).split()) + '\\\\\n'
+            out.write(k)
+        latex_footer = '\\end{tabular}\n\\caption{}\\label{tab:RCpops}\n\\end{table}\n'
+        out.write(latex_footer)
+        out.close()

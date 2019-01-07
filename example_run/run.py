@@ -12,3 +12,4 @@ chemical_shifts.calc_pops_for_all_residues()
 #output
 chemical_shifts.print_lines()
 chemical_shifts.write_lines(output_file)
+chemical_shifts.write_latex_pops('test.txt')
