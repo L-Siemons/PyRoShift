@@ -265,3 +265,30 @@ class Output():
         latex_footer = '\\end{tabular}\n\\caption{}\\label{tab:RCpops}\n\\end{table}\n'
         out.write(latex_footer)
         out.close()
+
+    def write_shift_tex_table(self, out):
+    	'''
+
+    	'''
+
+    	atom_map = {}
+    	atom_map['ca'] = '$C_{\\alpha}$'
+    	atom_map['cb'] = '$C_{\\beta}$'
+    	atom_map['cg1'] = '$C_{\\gamma 1}$'
+    	atom_map['cg2'] = '$C_{\\gamma 2}$'
+    	atom_map['cd1'] = '$C_{\\delta}$'
+        
+        header = '\\begin{table}[th]\n\\centering\n\\begin{tabular}{|l |l |l |l |l |}\n\\hline\n'
+        out_file = open(out, 'w')
+        out_file.write(header)
+        out_file.write('residue & atom & $\\delta_{calc}$ & $\\delta_{exp}$ & $|\\delta_{calc}-delta_{exp}|$ \\\\ \n')
+    	for res in self.calc_shifts:
+    		for atom in self.atoms:
+    			calc = self.calc_shifts[res][atom][0]
+    			exp = self.shifts[res][atom]
+    			diff = abs(exp-calc)
+    			line =  '%s & %s & %0.2f & %0.2f & %0.2f \\\\ \n' % (res, atom_map[atom], calc, exp, diff)
+    			out_file.write(line)
+    	
+    	end =  '\\end{tabular}\n\\caption{}\\label{}\n\\end{table}\n'
+    	out_file.write(end)

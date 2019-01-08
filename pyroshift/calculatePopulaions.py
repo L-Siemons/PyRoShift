@@ -209,7 +209,6 @@ class Isoleucine(Input, Output):
             pops[residue] = current_pops
             calc_shifts[residue] = current_shifts
 
-
         self.populations = pops
         self.calc_shifts = calc_shifts
 
