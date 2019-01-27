@@ -230,7 +230,7 @@ class Isoleucine(Input, Output):
         Returns:
         =======
         combined : dict 
-            this is a nested dictionary where the keys are residue and chi angle. 
+            this is a nested dictionary where the keys are; residue, chi angle, state. 
             the entry is tuple (value, entry)
 
         '''
