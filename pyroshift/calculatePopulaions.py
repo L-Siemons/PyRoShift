@@ -6,6 +6,7 @@ from chemical shifts
 import numpy as np
 from scipy.optimize import least_squares
 from .fileIO import Input, Output
+import random as rn
 
 class Isoleucine(Input, Output):
 
@@ -213,3 +214,74 @@ class Isoleucine(Input, Output):
         self.calc_shifts = calc_shifts
 
         return pops
+
+    def combine_along_chi_angles(self, mc_loop=1000):
+
+        '''
+        THis function projects the populations along each of the chi angles. 
+        This is done using a Monte Carlo approach. Note that at the end of this 
+        we normalise the populations so that they still sum to 1. 
+
+        Args:
+        =====
+        mc_loop : int 
+            number of cycles in the Monte Carlo loop, default is 1000
+
+        Returns:
+        =======
+        combined : dict 
+            this is a nested dictionary where the keys are residue and chi angle. 
+            the entry is tuple (value, entry)
+
+        '''
+
+        combined = {}
+        for res in self.populations:
+            states =  self.populations[res].keys()
+            combined[res] = {}
+
+            for current_angle, _ in enumerate(states[0]):
+                single_angle_states = list(set([a[current_angle] for a in states]))
+                chi_angle_name = str(current_angle+1)
+
+                # learning point; Never use fromkeys() with mutables as default values! 
+                # as it behaves really weirdly; 1hr was spent right here! 
+                all_values = dict.fromkeys(single_angle_states, ())
+
+                for _ in range(mc_loop):
+
+                    current_values = dict.fromkeys(single_angle_states, 0.)
+
+                    for state in  self.populations[res]:
+                        current_state = state[current_angle]
+                        mu = self.populations[res][state][0]
+                        sig = self.populations[res][state][1]
+                        
+                        #this is the mc bit 
+                        mc_value = rn.gauss(mu,sig)
+                        if mc_value < 0.: 
+                            mc_value = 0.
+                        elif mc_value > 1.:
+                            mc_value = 1.
+                        
+                        current_values[current_state] += mc_value
+
+                    for i in all_values:
+                        all_values[i] += (current_values[i],) 
+
+                total = 0.
+                
+                for i in all_values:
+                    val = np.mean(all_values[i])
+                    err = np.std(all_values[i])
+                    total += val 
+                    all_values[i] = (val, err)
+
+                #normalize the values and the error
+                for i in all_values:
+                    all_values[i] = [a/total for a in all_values[i]]
+
+                combined[res][chi_angle_name] = all_values
+
+        self.population_projections = combined
+        return combined
