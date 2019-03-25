@@ -7,6 +7,11 @@ import re
 import sys
 import os.path
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+from math import pi
+import re
+from . import util
 
 def strip_comments(string):
     '''
@@ -177,7 +182,7 @@ class Output():
         Initialize the class
         '''
 
-    def generate_lines(self,):
+    def generate_lines(self,order=False,strip=False):
         '''
         This function compiles the results from the calculation
         into a set of lines that can be written to a file or printed
@@ -187,7 +192,14 @@ class Output():
         top_line = '# residue'  + '  ' + '  '.join(states)
         lines = [top_line]
 
-        for res in self.populations:
+        if order == False:
+            keys = self.populations
+        else:
+            keys = [(''.join([i for i in a if not i.isdigit()]), int(re.sub("\D", "", a))) for a in self.populations]
+            keys = sorted(keys, key=lambda x: x[1])
+            keys = [i+str(k) for i,k in keys]
+
+        for res in keys:
             top_line = '#'
             sse = self.sse[res]
             top_line = '#'  + '  ' + '  '.join(self.state_order[sse])
@@ -198,25 +210,27 @@ class Output():
                 err =  self.populations[res][pop][1]
                 total = '%0.3f+/-%0.3f' % (val, err)
                 total_list.append(total)
-
+            
+            if strip == True: 
+                res = re.sub("\D", "", res)
             lines =lines + [res +  '    '+ '    '.join(total_list)]
 
         self.output_lines = lines
 
-    def print_lines(self):
+    def print_lines(self, order=False, strip=False):
         '''
         prints the calculation results to stdout (terminal screen)
         '''
 
         #generate the lines if need be
         if hasattr(self, 'output_lines') == False:
-            self.generate_lines()
+            self.generate_lines(order=order, strip=strip)
 
 
         for i in self.output_lines:
             print i
 
-    def write_lines(self, file):
+    def write_lines(self, file, order=False, strip=False):
         '''
         writes the calculation results to a file
 
@@ -228,7 +242,7 @@ class Output():
 
         #generate the lines if need be
         if hasattr(self, 'output_lines') == False:
-            self.generate_lines()
+            self.generate_lines(order=order, strip=strip)
 
         out = open(file, 'w')
         for i in self.output_lines:
@@ -236,7 +250,7 @@ class Output():
             out.write('\n')
         out.close()
 
-    def write_latex_pops(self, file):
+    def write_latex_pops(self, file, name_tag=None,):
         '''
         writes the populations into a latex table.
         
@@ -251,44 +265,187 @@ class Output():
         map_['t'] = 't'
         map_['p'] = 'g_{p}'
 
+        if name_tag == None:
+            tag = '\\caption{}'
+        else: 
+            tag = '\\caption{Chemical shift populations for %s.}' %(name_tag)
 
 
-        latex_header = '\\begin{table}[th]\n\\centering\n\\begin{tabular}{|l |l |l |l |l |l |l |l  |l |l| }\n\\hline\n'
+
+        latex_header = '\\begin{table}[th]\n%s\\label{}\n\\centering\n\\begin{tabular}{|l |l |l |l |l |l |l |l  |l |l| }\n\\hline\n' %(tag)
         out = open(file,'w')
         out.write(latex_header)
 
         for i in self.output_lines:
             i = i.lower().replace('ile', '')
-            j = i.replace('#', '')
-            k = ' & '.join(j.replace('+/-','\\pm' ).split()) + '\\\\\n'
+
+            if '#' in i:
+                j = i.replace('#', '')
+                for entry in map_:
+                    j = j.replace(entry, '$%s$'%(map_[entry]))
+                j = j.replace('$$', '/')
+            else:
+                j = i 
+
+            k = ' & '.join(j.replace('+/-','$\\pm$' ).split()) + '\\\\\n'
             out.write(k)
-        latex_footer = '\\end{tabular}\n\\caption{}\\label{tab:RCpops}\n\\end{table}\n'
+        latex_footer = '\\end{tabular}\n\\end{table}\n'
         out.write(latex_footer)
         out.close()
 
-    def write_shift_tex_table(self, out):
-    	'''
+    def write_shift_tex_table(self, out, name_tag=None, strip=False,order=False):
+        '''
 
-    	'''
+        '''
 
-    	atom_map = {}
-    	atom_map['ca'] = '$C_{\\alpha}$'
-    	atom_map['cb'] = '$C_{\\beta}$'
-    	atom_map['cg1'] = '$C_{\\gamma 1}$'
-    	atom_map['cg2'] = '$C_{\\gamma 2}$'
-    	atom_map['cd1'] = '$C_{\\delta}$'
+        atom_map = {}
+        atom_map['ca'] = 'C$_{\\alpha}$'
+        atom_map['cb'] = 'C$_{\\beta}$'
+        atom_map['cg1'] = 'C$_{\\gamma 1}$'
+        atom_map['cg2'] = 'C$_{\\gamma 2}$'
+        atom_map['cd1'] = 'C$_{\\delta}$'
+
+        if name_tag == None:
+            tag = '\\caption{}'
+        else: 
+            tag = '\\caption{Experimental and calculated chemical shifts for %s.}' %(name_tag)
+
+
         
-        header = '\\begin{table}[th]\n\\centering\n\\begin{tabular}{|l |l |l |l |l |}\n\\hline\n'
+        header = '\\begin{table}[th]\n%s\\label{}\n\\centering\n\\begin{tabular}{|l |l |l |l |l |}\n\\hline\n' %(tag)
         out_file = open(out, 'w')
         out_file.write(header)
-        out_file.write('residue & atom & $\\delta_{calc}$ & $\\delta_{exp}$ & $|\\delta_{calc}-delta_{exp}|$ \\\\ \n')
-    	for res in self.calc_shifts:
-    		for atom in self.atoms:
-    			calc = self.calc_shifts[res][atom][0]
-    			exp = self.shifts[res][atom]
-    			diff = abs(exp-calc)
-    			line =  '%s & %s & %0.2f & %0.2f & %0.2f \\\\ \n' % (res, atom_map[atom], calc, exp, diff)
-    			out_file.write(line)
-    	
-    	end =  '\\end{tabular}\n\\caption{}\\label{}\n\\end{table}\n'
-    	out_file.write(end)
+        out_file.write('residue & atom & $\\delta_{calc}$ & $\\delta_{exp}$ & $|\\delta_{calc}-\\delta_{exp}|$ \\\\ \n')
+
+        if order == False:
+            keys = self.calc_shifts
+
+        else:
+            keys = [(''.join([i for i in a if not i.isdigit()]), int(re.sub("\D", "", a))) for a in self.calc_shifts]
+            keys = sorted(keys, key=lambda x: x[1])
+            keys = [i+str(k) for i,k in keys]
+
+
+        for res in keys:
+            for atom in self.atoms:
+                calc = self.calc_shifts[res][atom][0]
+                exp = self.shifts[res][atom]
+                diff = abs(exp-calc)
+                if strip == True:
+                    res_entry = re.sub("\D", "", res)
+                else:
+                    res_entry = res
+                line =  '%s & %s & %0.2f & %0.2f & %0.2f \\\\ \n' % (res_entry, atom_map[atom], calc, exp, diff)
+                out_file.write(line)
+        
+        end =  '\\end{tabular}\n\\end{table}\n'
+        out_file.write(end)
+
+    def plot_radar(self, tex=False, top8000=False, size=(10,8), label_size=(12, 10),save=False, set_level=False):
+        '''
+        plot radar plots for each of the populations
+
+        Args:
+        =====
+
+        tex : bool
+            - use tex to make the axis, note this will require tex
+        top8000 : bool or str 
+            - plot the top8000 rotamer distribution. False or the 3 letter code for the residue.
+        size : tuple 
+            - size of the figure 
+        label_size : tuple
+            - text sizes for the axis
+        save : bool 
+            - save the figures instead of displaying them 
+
+        '''
+
+        matplotlib.rc('xtick', labelsize=label_size[0])
+        matplotlib.rc('ytick', labelsize=label_size[1])
+        matplotlib.rcParams['axes.linewidth'] = 2
+    
+        if tex == True:
+            
+            conv_dict = {}
+            conv_dict['t'] = 't' 
+            conv_dict['m'] = 'g_{m}' 
+            conv_dict['p'] = 'g_{p}' 
+
+
+        for res in self.populations:
+            
+            categories = self.state_order[self.sse[res]]
+            pops = [self.populations[res][a][0] for a in categories]
+            N = len(categories)
+
+            if top8000 != False:
+                pdb_pops = util.read_pdb_distribution(top8000)
+                pdb_pops = [pdb_pops[a] for a in categories]
+            else:
+                pdb_pops = []
+
+
+            if tex == True:
+                categories = ['/'.join([conv_dict[b] for b in list(a)]) for a in categories]
+                categories = ['$%s$'%(a) for a in categories]
+
+            max_pop = max(pops+pdb_pops)
+
+            # What will be the angle of each axis in the plot? (we divide the plot / number of variable)
+            angles = [(n / float(N) *2* pi)for n in range(N)]
+
+            angles += angles[:1]
+
+            # Initialise the spider plot
+            plt.figure(figsize=(util.cm2inch(size[0]), util.cm2inch(size[1])))
+            plt.rc('text', usetex=True)
+            plt.rcParams["font.family"] = "sans-serif"
+            plt.rcParams['text.latex.preamble'] = [
+                            r'\usepackage{tgheros}',    # helvetica font
+                            r'\usepackage{sansmath}',   # math-font matching  helvetica
+                            r'\sansmath'                # actually tell tex to use it!
+                            r'\usepackage{siunitx}',    # micro symbols
+                            r'\sisetup{detect-all}',    # force siunitx to use the fonts
+                        ]  
+
+
+            ax = plt.subplot(111, polar=True)
+            ax.yaxis.grid(linewidth=2)
+            ax.xaxis.grid(linewidth=2)
+            # Draw one axe per variable + add labels labels yet
+            plt.xticks(angles[:-1], categories, color='k')
+
+            # Draw ylabels
+            ax.set_rlabel_position(angles[2]*(180./pi))
+            deg_angles = [a*(180./pi) for a in angles[:-1]]
+            ax.set_thetagrids(deg_angles, frac=1.24)
+            
+
+            if 0.75 < max_pop or set_level == 1.: 
+                plt.yticks([0.25,0.5,0.75], ['0.25','0.5','0.75'], color="k")
+                plt.ylim(0,1)
+            elif 0.5 < max_pop <= 0.75 or set_level == 0.75:
+                plt.yticks([0.25,0.5], ['0.25','0.5'], color="k")
+                plt.ylim(0,0.75)          
+            elif 0 < max_pop <= 0.5 or set_level == 0.5:
+                plt.yticks([0.1, 0.2, 0.3, 0.4], ['0.1', '0.2', '0.3', '0.4'], color="k")
+                plt.ylim(0,0.5)
+            else:
+                print 'you should not have got here ...'
+
+            #plot rc 
+            if top8000 != False:
+                pdb_values = pdb_pops + [pdb_pops[0]]
+                ax.plot(angles, pdb_values, linewidth=3, linestyle='solid',c='k')
+                ax.fill(angles, pdb_values, 'k', alpha=0.1)            
+
+            values = pops + [pops[0]]
+            ax.plot(angles, values, linewidth=3, linestyle='solid',c='b')
+            ax.fill(angles, values, 'b', alpha=0.1)
+
+            if save == False:
+                plt.show()
+            else:
+                name = res+'.pdf'
+                plt.savefig(name,bbox_inches='tight')
