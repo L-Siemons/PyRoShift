@@ -112,10 +112,11 @@ class Isoleucine(Input, Output):
         shifts : np array 
         	contains the calculated chemical shifts 
         '''
-        lb = np.zeros(5)
+        lb = np.zeros(state_matrix.shape[0])
         ub = lb+1
-
-        start_pops = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
+        
+        start_pops = [1./state_matrix.shape[0] for _ in range(state_matrix.shape[0])]
+        start_pops = np.array(start_pops)
         args = [cs_vector, state_matrix]
 
         result = least_squares(self.resid, start_pops, bounds=(lb, ub), args=args)

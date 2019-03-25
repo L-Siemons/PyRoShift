@@ -129,8 +129,24 @@ class Input(file):
 
         resources = os.path.join(os.path.split(__file__)[0], "resources/")
 
+        if ref_opt_file == 'default':
+            if shift_matrix == 'default':
+                ref_opt_file = resources +  'ref_opts_5_states.dat'
+
+            elif shift_matrix == 'default_4_states':
+                ref_opt_file = resources +  'ref_opts_4_states.dat'
+
+        ref_opts = open(ref_opt_file)
+        for line in ref_opts:
+            s = line.split()
+            self.opts.append(np.array([float(a) for a in s[2:]]))
+        ref_opts.close()
+
         if shift_matrix == 'default':
-            shift_matrix = resources + 'CS_DFT_surf_average_aceIleNmePdb_final.cs'
+            shift_matrix = resources + 'CS_DFT_ile_5_states.cs'
+
+        if shift_matrix == 'default_4_states':
+            shift_matrix = resources + 'CS_DFT_ile_4_states.cs'
 
         matrix_file = open(shift_matrix)
         for line in matrix_file:
@@ -152,14 +168,6 @@ class Input(file):
         for backbone in self.shift_matrix:
             self.shift_matrix[backbone] = np.array(self.shift_matrix[backbone])
 
-        if ref_opt_file == 'default':
-            ref_opt_file = resources +  'compiled_ref_opts.dat'
-
-        ref_opts = open(ref_opt_file)
-        for line in ref_opts:
-            s = line.split()
-            self.opts.append(np.array([float(a) for a in s[2:]]))
-        ref_opts.close()
 
 class Output():
     '''
