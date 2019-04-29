@@ -35,7 +35,7 @@ class Isoleucine(Input, Output):
         - (population, error)
     '''
 
-    def __init__(self, file, shift_matrix='default', ref_opt_file='default'):
+    def __init__(self, file, shift_matrix='default', ref_opt_file='default',force_constant='default'):
 
         '''
         This collects all the required inputs and initializes the classes
@@ -48,6 +48,10 @@ class Isoleucine(Input, Output):
         Input.__init__(self, file, shift_matrix=shift_matrix, ref_opt_file=ref_opt_file)
         Output.__init__(self,)
         self.atoms = ['ca', 'cb', 'cg1', 'cg2', 'cd1']
+        if force_constant == 'default':
+            self.force_constant = np.array([2./2.68,2./2.00,2./1.70,2./1.34,2./1.66])
+        else: 
+            self.force_constant = force_constant
 
     def eq(self, state_matrix, pops_vector):
         '''
@@ -89,7 +93,7 @@ class Isoleucine(Input, Output):
         '''
 
         cs_model = self.eq(matrix, pops_vector)
-        resdidual = cs_model - cs_vector
+        resdidual = (cs_model - cs_vector)*force_constant
         restraint = 1e4*(np.sum(pops_vector) - 1.)
         total = np.append(resdidual, restraint)
         return total
@@ -109,12 +113,12 @@ class Isoleucine(Input, Output):
         ========
         result.x : np.array
             populations from the fits
-        shifts : np array 
-        	contains the calculated chemical shifts 
+        shifts : np array
+        	contains the calculated chemical shifts
         '''
         lb = np.zeros(state_matrix.shape[0])
         ub = lb+1
-        
+
         start_pops = [1./state_matrix.shape[0] for _ in range(state_matrix.shape[0])]
         start_pops = np.array(start_pops)
         args = [cs_vector, state_matrix]
@@ -122,7 +126,7 @@ class Isoleucine(Input, Output):
         result = least_squares(self.resid, start_pops, bounds=(lb, ub), args=args)
         shifts = np.dot(result.x, state_matrix)
 
-        return result.x, shifts 
+        return result.x, shifts
 
     def calc_pop_for_all_opts(self, state_matrix, cs_vector, sse):
         '''
@@ -168,7 +172,7 @@ class Isoleucine(Input, Output):
             val = np.mean(i)
             std = np.std(i)
             shifts_dict[j] = (val, std)
-         
+
         return pops_dict, shifts_dict
 
     def calc_pops_for_all_residues(self, ):
@@ -183,7 +187,7 @@ class Isoleucine(Input, Output):
         - P is a vector containing the populations
         - C_exp is a vector with the experimental populations
 
-        This method defines self.populations and self.calc_shifts 
+        This method defines self.populations and self.calc_shifts
 
         Returns:
         =======
@@ -207,7 +211,7 @@ class Isoleucine(Input, Output):
                 shifts.append(self.shifts[residue][i])
             shifts = np.array(shifts)
             current_pops, current_shifts = self.calc_pop_for_all_opts(shift_matrix, shifts, res_sse)
-            
+
             pops[residue] = current_pops
             calc_shifts[residue] = current_shifts
 
@@ -219,19 +223,19 @@ class Isoleucine(Input, Output):
     def combine_along_chi_angles(self, mc_loop=1000):
 
         '''
-        THis function projects the populations along each of the chi angles. 
-        This is done using a Monte Carlo approach. Note that at the end of this 
-        we normalise the populations so that they still sum to 1. 
+        THis function projects the populations along each of the chi angles.
+        This is done using a Monte Carlo approach. Note that at the end of this
+        we normalise the populations so that they still sum to 1.
 
         Args:
         =====
-        mc_loop : int 
+        mc_loop : int
             number of cycles in the Monte Carlo loop, default is 1000
 
         Returns:
         =======
-        combined : dict 
-            this is a nested dictionary where the keys are; residue, chi angle, state. 
+        combined : dict
+            this is a nested dictionary where the keys are; residue, chi angle, state.
             the entry is tuple (value, entry)
 
         '''
@@ -245,8 +249,8 @@ class Isoleucine(Input, Output):
                 single_angle_states = list(set([a[current_angle] for a in states]))
                 chi_angle_name = str(current_angle+1)
 
-                # learning point; Never use fromkeys() with mutables as default values! 
-                # as it behaves really weirdly; 1hr was spent right here! 
+                # learning point; Never use fromkeys() with mutables as default values!
+                # as it behaves really weirdly; 1hr was spent right here!
                 all_values = dict.fromkeys(single_angle_states, ())
 
                 for _ in range(mc_loop):
@@ -257,25 +261,25 @@ class Isoleucine(Input, Output):
                         current_state = state[current_angle]
                         mu = self.populations[res][state][0]
                         sig = self.populations[res][state][1]
-                        
-                        #this is the mc bit 
+
+                        #this is the mc bit
                         mc_value = rn.gauss(mu,sig)
-                        if mc_value < 0.: 
+                        if mc_value < 0.:
                             mc_value = 0.
                         elif mc_value > 1.:
                             mc_value = 1.
-                        
+
                         current_values[current_state] += mc_value
 
                     for i in all_values:
-                        all_values[i] += (current_values[i],) 
+                        all_values[i] += (current_values[i],)
 
                 total = 0.
-                
+
                 for i in all_values:
                     val = np.mean(all_values[i])
                     err = np.std(all_values[i])
-                    total += val 
+                    total += val
                     all_values[i] = (val, err)
 
                 #normalize the values and the error
