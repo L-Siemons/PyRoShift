@@ -12,6 +12,7 @@ import matplotlib
 from math import pi
 import re
 from . import util
+from . import exceptions
 
 def strip_comments(string):
     '''
@@ -90,16 +91,15 @@ class Input(file):
             - file containing the optimizations for the chemical shift matrix
         '''
 
-        sse_map = {}
-        sse_map['a'] = 'alpha'
-        sse_map['b'] = 'beta'
-        sse_map['r'] = 'coil'
-
         self.sse = {}
         self.shifts = {}
         self.opts = []
         self.shift_matrix = {}
-        self.state_order = {}
+        state_order = {}
+
+        alpha_list = ('a', 'alpha', 'h', 'helix')
+        beta_list = ('b', 'beta', 'sheet', 'strand')
+        coil_list = ('c', 'coil', 'r')
 
         f = open(shift_file)
         for line in f.readlines():
@@ -110,9 +110,36 @@ class Input(file):
             if s != []:
                 res = s[0]
                 atom = s[1].lower()
+
+                # Here we read in the secondary structure. 
                 if atom == 'ca':
                     current_sse = s[3].lower()
-                    self.sse[res] = sse_map[current_sse]
+                    if current_sse in alpha_list:
+                        self.sse[res] = 1. 
+                    elif current_sse in beta_list:
+                        self.sse[res] = 0.
+                    elif current_sse in coil_list:
+                        self.sse[res] = 0.5
+
+                    # Do a few checks
+                    else:
+                        check = True
+                        try:
+                            
+                            self.sse[res] = float(current_sse)
+                            if 1. <= self.sse[res]:
+                                check = False
+                            if 0. >= self.sse[res]:
+                                check = False
+
+                        except ValueError:
+                            check = False
+
+                        if check == False:
+                            print res, current_sse
+                            raise exceptions.Secondry_Structure_Error(res, current_sse)
+
+                    #self.sse[res] = sse_map[current_sse]
 
                 if res not in self.shifts:
                     self.shifts[res] = {}
@@ -155,18 +182,29 @@ class Input(file):
             sse = s[0]
 
             try:
-                if state not in self.state_order[sse]:
-                    self.state_order[sse].append(state)
+                if state not in state_order[sse]:
+                    state_order[sse].append(state)
             except KeyError:
-                self.state_order[sse] = [state]
+                state_order[sse] = [state]
 
             if sse not in self.shift_matrix:
                 self.shift_matrix[sse] = []
 
             self.shift_matrix[sse].append([float(a) for a in s[2:]])
+        matrix_file.close()
 
         for backbone in self.shift_matrix:
             self.shift_matrix[backbone] = np.array(self.shift_matrix[backbone])
+        
+        #check all the state orders are the same
+        #if this is not true we cannot add and subtract the matrices
+        
+        orders = [str(i[1]) for i in state_order.items()]
+        identity_check = len(set(orders))
+        if identity_check != 1:
+            raise exceptions.ShiftMatrixStatesOrder(shift_matrix)
+        else:
+            self.state_order = state_order.items()[0][1]
 
 
 class Output():
