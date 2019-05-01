@@ -44,9 +44,11 @@ class Isoleucine(Input, Output):
         The attributes these two classes create are documents under their respective class
         '''
 
-        #read everything in!
+        #read everything in! these are inuput and output functions
         Input.__init__(self, file, shift_matrix=shift_matrix, ref_opt_file=ref_opt_file)
         Output.__init__(self,)
+
+        #define a few things
         self.atoms = ['ca', 'cb', 'cg1', 'cg2', 'cd1']
         if force_constant == 'default':
             self.force_constant = np.array([2./2.68,2./2.00,2./1.70,2./1.34,2./1.66])
@@ -93,7 +95,7 @@ class Isoleucine(Input, Output):
         '''
 
         cs_model = self.eq(matrix, pops_vector)
-        resdidual = (cs_model - cs_vector)*force_constant
+        resdidual = (cs_model - cs_vector)*self.force_constant
         restraint = 1e4*(np.sum(pops_vector) - 1.)
         total = np.append(resdidual, restraint)
         return total
