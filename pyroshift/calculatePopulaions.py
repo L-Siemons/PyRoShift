@@ -165,7 +165,7 @@ class Isoleucine(Input, Output):
         shift_list = np.array(shift_list).T
         shifts_dict = {}
 
-        for i, j in zip(pops_list, self.state_order[sse]):
+        for i, j in zip(pops_list, self.state_order):
             val = np.mean(i)
             std = np.std(i)
             pops_dict[j] = (val, std)
@@ -206,7 +206,7 @@ class Isoleucine(Input, Output):
         for residue in self.shifts:
 
             res_sse = self.sse[residue]
-            shift_matrix = self.shift_matrix[res_sse]
+            shift_matrix = self.shift_matrix['alpha']*res_sse + self.shift_matrix['beta']*(1.-res_sse)
             shifts = []
 
             for i in self.atoms:
