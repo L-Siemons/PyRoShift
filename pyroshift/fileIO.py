@@ -198,7 +198,7 @@ class Input(file):
         
         #check all the state orders are the same
         #if this is not true we cannot add and subtract the matrices
-        
+
         orders = [str(i[1]) for i in state_order.items()]
         identity_check = len(set(orders))
         if identity_check != 1:
@@ -234,7 +234,7 @@ class Output():
         into a set of lines that can be written to a file or printed
         '''
 
-        states = list(set(self.state_order['alpha']))
+        states = list(set(self.state_order))
         top_line = '# residue'  + '  ' + '  '.join(states)
         lines = [top_line]
 
@@ -248,7 +248,7 @@ class Output():
         for res in keys:
             top_line = '#'
             sse = self.sse[res]
-            top_line = '#'  + '  ' + '  '.join(self.state_order[sse])
+            top_line = '#'  + '  ' + '  '.join(self.state_order)
             total_list = []
 
             for pop in states:
@@ -421,7 +421,7 @@ class Output():
 
         for res in self.populations:
             
-            categories = self.state_order[self.sse[res]]
+            categories = self.state_order
             pops = [self.populations[res][a][0] for a in categories]
             N = len(categories)
 
