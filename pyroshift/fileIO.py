@@ -113,6 +113,7 @@ class Input(file):
 
                 # Here we read in the secondary structure. 
                 if atom == 'ca':
+
                     current_sse = s[3].lower()
                     if current_sse in alpha_list:
                         self.sse[res] = 1. 
@@ -262,6 +263,15 @@ class Output():
             lines =lines + [res +  '    '+ '    '.join(total_list)]
 
         self.output_lines = lines
+
+    def print_sse(self):
+        '''
+        print out the SSE 
+        '''
+
+        print '1 = 100%% alpha, 0 = 100%% beta'
+        for res in self.sse:
+            print '%10s %10s' %(res, self.sse[res])
 
     def print_lines(self, order=False, strip=False):
         '''
@@ -446,6 +456,7 @@ class Output():
             # Initialise the spider plot
             plt.figure(figsize=(util.cm2inch(size[0]), util.cm2inch(size[1])))
             plt.rc('text', usetex=True)
+            plt.title(res)
             plt.rcParams["font.family"] = "sans-serif"
             plt.rcParams['text.latex.preamble'] = [
                             r'\usepackage{tgheros}',    # helvetica font
