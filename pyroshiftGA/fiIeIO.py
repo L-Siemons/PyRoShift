@@ -188,10 +188,13 @@ def Wite_solutions(best_indiv_id, final_gen, Mean_CS, Measured_CS, params):
     S_file = open(out_name, 'a')
 
     total = sum(final_gen[best_indiv_id])
+    print 'total: ', total 
+
+    final_gen[best_indiv_id] = [ np.divide(i, total) for i in final_gen[best_indiv_id]]
 
     for i in range(len(final_gen[best_indiv_id])):
 
-        S_file.write(str(np.divide(final_gen[best_indiv_id][i], total)) + '   ')
+        S_file.write(str(i)+'   ')
     S_file.write('\n')
     S_file.close()
 
@@ -199,8 +202,8 @@ def Wite_solutions(best_indiv_id, final_gen, Mean_CS, Measured_CS, params):
     best_indiv_name = out_name.split('.')[0] + '_bestIndiv.txt'
 
     #this is just some reformatting so we can use Computed_shifts()
-    dummyDict = {}
-    dummyDict[0] = final_gen[best_indiv_id]
+    dummyDict = [final_gen[best_indiv_id]]
+    print dummyDict
 
     #calculate the chemical shift
     closest_shifts = cs.Computed_shifts(dummyDict, Mean_CS, params)
