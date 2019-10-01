@@ -1,5 +1,0 @@
-4     58.550173      :Alpha carbon
-5     36.213395    :Beta carbon
-12    none     :C gamma 2
-6     27.110299     :c gamma 1
-24    none      :c delta 
