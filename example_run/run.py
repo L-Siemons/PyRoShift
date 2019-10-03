@@ -13,6 +13,8 @@ chemical_shifts.calc_pops_for_all_residues()
 chemical_shifts.print_lines()
 chemical_shifts.write_lines(output_file)
 
+chemical_shifts.plot_radar()
+
 #write out the latex files!
 chemical_shifts.write_latex_pops('latex_populations.tex')
 chemical_shifts.write_shift_tex_table('latex_shifts.tex')
