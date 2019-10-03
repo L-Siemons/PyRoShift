@@ -1,15 +1,18 @@
 from setuptools import setup, find_packages
 
 descrip='''
-     ====// cs2rotamer \\\\====
+     ====// PyRoShift \\\\====
 
-This package looks to determine protein
+This package determines protein
 side-chain rotamer populations from chemical
 shifts.
 
 Currently only isoleucine is implemented here.
-This package is principally maintained by
-Lucas Siemons
+If you wish to add more please get in touch!
+
+If you use this work please cite our paper:
+
+     ====// --------- \\\\====
 
 Author:
 Lucas Siemons
@@ -20,7 +23,7 @@ setup(
     name='pyroshift',
     version='1.0',
     author='L. Siemons',
-    author_email='zcbtla0@ucl.ac.uk',
+    author_email='lucas.siemons@googlemail.com',
     packages=find_packages(),
     license='LICENSE.txt',
     description=descrip,
