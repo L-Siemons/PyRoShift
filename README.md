@@ -1,5 +1,5 @@
 
-PyRoShift <h1>
+<h1> PyRoShift <h1>
 
 PyRoShift (PYthon ROtamers from chemical SHIFT) is a module that
 calculates protein side-chain rotamer populations from carbon
@@ -10,7 +10,7 @@ If you use this program please cite the following:
 XXX
 
 
-What does it do? <h3>
+<h3> What does it do? <h3>
 
 
 Principally this method takes the chemical shifts for
@@ -32,7 +32,7 @@ be defined by both chi angles! The first letter denote the state of chi 1 and th
 second the state of chi 2.
 
 
-Installation <h3>
+<h3> Installation <h3>
 
 
 On Linux and Mac one can install this module as with any other module.
@@ -51,7 +51,7 @@ Note that depending on how your system is set up
 you might need to use sudo.
 
 
-How to use <h3>
+<h3> How to use <h3>
 
 
 For an example on how to use this module please see the example_run/ directory.
@@ -62,7 +62,7 @@ python run.py
 ```
 
 
-Authors <h3>
+<h3> Authors <h3>
 
 
 This module is written and maintained by
