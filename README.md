@@ -9,7 +9,7 @@ If you want to add another residue please get in touch!
 If you use this program please cite the following:
 XXX
 
-## What does it do?
+# What does it do?
 
 Principally this method takes the chemical shifts for
 Ca, Cb, Cg1, Cg2 and Cd1 and determines the population
@@ -26,7 +26,8 @@ Where:
 - p = gauche +  ( 60 degrees)
 
 Note that unlike many other methods this approach considers each rotamer to
-be defined by both chi angles!
+be defined by both chi angles! The first letter denote the state of chi 1 and the
+second the state of chi 2.
 
 # Installation
 
@@ -45,13 +46,16 @@ pip install .
 Note that depending on how your system is set up
 you might need to use sudo.
 
-## How to use
+# How to use
 
 For an example on how to use this module please see the example_run/ directory.
-Here there should be an example called run.py and also a notebook describing all the
-steps.
+Here there should be an example called run.py and also a ipython notebook describing all the
+steps. To run the example script simply use
+```
+python run.py
+```
 
-### Authors
+# Authors
 
 This module is written and maintained by
 Lucas Siemons
