@@ -477,23 +477,26 @@ class Output():
             max_pop = max(pops + pdb_pops)
 
             # What will be the angle of each axis in the plot? (we divide the plot / number of variable)
-            angles = [(n / float(N) * 2 * pi) for n in range(N)]
+            angles = [((n+0.5) / float(N) * 2 * pi) for n in range(N)]
 
             angles += angles[:1]
 
             # Initialise the spider plot
             plt.figure(figsize=(util.cm2inch(size[0]), util.cm2inch(size[1])))
-            plt.rc('text', usetex=True)
-            plt.rcParams["font.family"] = "sans-serif"
-            plt.rcParams['text.latex.preamble'] = [
-                r'\usepackage{tgheros}',  # helvetica font
-                r'\usepackage{sansmath}',  # math-font matching  helvetica
-                r'\sansmath'  # actually tell tex to use it!
-                r'\usepackage{siunitx}',  # micro symbols
-                r'\sisetup{detect-all}',  # force siunitx to use the fonts
-            ]
+
+            if tex == True:
+                plt.rc('text', usetex=True)
+                plt.rcParams["font.family"] = "sans-serif"
+                plt.rcParams['text.latex.preamble'] = [
+                    r'\usepackage{tgheros}',  # helvetica font
+                    r'\usepackage{sansmath}',  # math-font matching  helvetica
+                    r'\sansmath'  # actually tell tex to use it!
+                    r'\usepackage{siunitx}',  # micro symbols
+                    r'\sisetup{detect-all}',  # force siunitx to use the fonts
+                ]
 
             ax = plt.subplot(111, polar=True)
+            ax.set_title(res)
             ax.yaxis.grid(linewidth=2)
             ax.xaxis.grid(linewidth=2)
             # Draw one axe per variable + add labels labels yet
@@ -531,6 +534,7 @@ class Output():
             values = pops + [pops[0]]
             ax.plot(angles, values, linewidth=3, linestyle='solid', c='b')
             ax.fill(angles, values, 'b', alpha=0.1)
+            plt.tight_layout()
 
             if save == False:
                 plt.show()

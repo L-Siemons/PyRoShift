@@ -240,8 +240,6 @@ class Isoleucine(Input, Output):
         self.populations = pops
         self.calc_shifts = calc_shifts
 
-        return pops
-
     def combine_along_chi_angles(self, mc_loop=1000):
         '''
         THis function projects the populations along each of the chi angles.
