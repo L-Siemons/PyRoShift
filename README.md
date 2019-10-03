@@ -46,7 +46,7 @@ pip install .
 Note that depending on how your system is set up
 you might need to use sudo.
 
-# How to use
+# How
 
 For an example on how to use this module please see the example_run/ directory.
 Here there should be an example called run.py and also a ipython notebook describing all the
