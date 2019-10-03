@@ -1,72 +1,65 @@
 
+# PyRoShift
 
-  ========== // ========== ========= ========== // ==========
-  ========== // ========== PyRoShift ========== // ==========
-  ========== // ========== ========= ========== // ==========
+PyRoShift (PYthon ROtamers from chemical SHIFT) is a module that
+calculates protein side-chain rotamer populations from carbon
+chemical shifts. Currently it is implemented for isoleucine.
+If you want to add another residue please get in touch!
 
+If you use this program please cite the following:
+XXX
 
-  What is it?
-  -----------
+## What does it do?
 
-  Pyroshift (PYthon ROtamers from Chemical SHIFT) program
-  calculates protein side chain rotamer populations from carbon
-  chemical shifts. This is implemented for the following residues:
+Principally this method takes the chemical shifts for
+Ca, Cb, Cg1, Cg2 and Cd1 and determines the population
+for each of the four rotamers:
 
-  - isoleucine
+- t/t
+- m/m
+- p/t
+- m/t
 
-   If you use this program please cite the following:
-   XXX
+Where:
+- t = trans     (180 degrees)
+- m = gauche -  (300 degrees)
+- p = gauche +  ( 60 degrees)
 
+Note that unlike many other methods this approach considers each rotamer to
+be defined by both chi angles!
 
-  When to use
-  -----------
+# Installation
 
-  This method can be used when the backbone conformation
-  is known and the 5 side-chain chemical shifts can be provided.
-  So far this method provides the rotamer distributions for the following
-  five states in isoleucine.
+On Linux and Mac one can install this module as with any other module.
+1. Download this repository from the github page.
+2. Go to the directory where the setup.py is
+3. Install as follows:
+```
+$ python setup.py build
+$ python setup.py install
+```
+or
+```
+pip install .
+```
+Note that depending on how your system is set up
+you might need to use sudo.
 
-  t/t, t/p,m/m,p/t,m/t
+## How to use
 
-  Note;
-  t = trans     (180 degrees)
-  m = gauche -  (300 degrees)
-  p = gauche +  ( 60 degrees)
+For an example on how to use this module please see the example_run/ directory.
+Here there should be an example called run.py and also a notebook describing all the
+steps.
 
-  Installation
-  ------------
+### Authors
 
-  On Linux and Mac one can install the module as with any other module using
+This module is written and maintained by
+Lucas Siemons
 
-  $ python setup.py build
-  $ python setup.py install
+If you have any question please feel free to
+email me at lucas.siemons@googlemail.com.
 
-  or
-
-  pip install .
-
-
-  How to use
-  -----------
-
-  To use this program:
-
-  1)  An example of a working directory is shown in example_run/
-        - Only two components are needed:
-            1) The file with the chemical shifts
-            2) the script that executes the functions in Pyroshift
-
-  2) To Run the program one simply executes run.py
-        - Note that one can edit the file names by changing the variables
-            chemical_shifts_file
-            output_file
-
-  3) To use one's own data one can simply edit the file containing the chemical shifts
-     the secondary structure only needs to be given in the row with the C alpha.
-     The options for the secondary structure are alpha, beta and random coil (A,B and R)
-
-  -----------------
-  This program was written by Lucas Siemons.
-
-  This work was carried out in collaboration with
-  Dr Flemming Hansen
+On a more personal note this is my first Python
+module and if you have any critical advice on how to
+improve this body of code (both functionally and stylistically)
+please let me know!
