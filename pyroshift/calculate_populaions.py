@@ -7,7 +7,7 @@ import random as rn
 import numpy as np
 
 from scipy.optimize import least_squares
-from .fileIO import Input, Output
+from .file_io import Input, Output
 
 
 
@@ -21,7 +21,7 @@ class Isoleucine(Input, Output):
 
     This class initializes two classes to deal with the inputs and outputs for this method.
     The methods and attributes from these are documented in their respective class
-    in pyroshift/FileIo.py
+    in pyroshift/file_io.py
 
 
 

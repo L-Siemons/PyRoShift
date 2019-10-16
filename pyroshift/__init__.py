@@ -9,5 +9,5 @@ Lucas Siemons
 
 '''
 
-from .fileIO import Input
+from .file_io import Input
 from .calculate_populaions import Isoleucine
