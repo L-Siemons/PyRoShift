@@ -269,7 +269,7 @@ class Output():
                 total = '%0.3f+/-%0.3f' % (val, err)
                 total_list.append(total)
 
-            if strip == True:
+            if strip is True:
                 res = re.sub(r"\D", "", res)
             lines = lines + [res + '    ' + '    '.join(total_list)]
 
@@ -407,7 +407,7 @@ class Output():
                 calc = self.calc_shifts[res][atom][0]
                 exp = self.shifts[res][atom]
                 diff = abs(exp - calc)
-                if strip == True:
+                if strip is True:
                     res_entry = re.sub(r"\D", "", res)
                 else:
                     res_entry = res
@@ -448,7 +448,7 @@ class Output():
         matplotlib.rc('ytick', labelsize=label_size[1])
         matplotlib.rcParams['axes.linewidth'] = 2
 
-        if tex == True:
+        if tex is True:
 
             conv_dict = {}
             conv_dict['t'] = 't'
@@ -467,7 +467,7 @@ class Output():
             else:
                 pdb_pops = []
 
-            if tex == True:
+            if tex is True:
                 categories = [
                     '/'.join([conv_dict[b] for b in list(a)])
                     for a in categories
@@ -484,7 +484,7 @@ class Output():
             # Initialise the spider plot
             plt.figure(figsize=(util.cm2inch(size[0]), util.cm2inch(size[1])))
 
-            if tex == True:
+            if tex is True:
                 plt.rc('text', usetex=True)
                 plt.rcParams["font.family"] = "sans-serif"
                 plt.rcParams['text.latex.preamble'] = [
