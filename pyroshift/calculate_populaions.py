@@ -51,9 +51,9 @@ class Isoleucine(Input, Output):
 
         #read everything in! these are input and output functions
         inp.__init__(self,
-                       file,
-                       shift_matrix=shift_matrix,
-                       ref_opt_file=ref_opt_file)
+                     file,
+                     shift_matrix=shift_matrix,
+                     ref_opt_file=ref_opt_file)
 
         Output.__init__(self, )
 
