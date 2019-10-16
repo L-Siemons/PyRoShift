@@ -224,7 +224,7 @@ class Output():
     This class contains functions for writing out the results from the
     chemical shift calculations.
 
-    In general it is intended to be used as part of calculatePopulaions.isoleucine
+    In general it is intended to be used as part of calculate_populaions.isoleucine
     and uses it's attribute isoleucine.populations
 
     There are two output modes: print to screen and write to file

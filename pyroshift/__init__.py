@@ -10,4 +10,4 @@ Lucas Siemons
 '''
 
 from .fileIO import Input
-from .calculatePopulaions import Isoleucine
+from .calculate_populaions import Isoleucine
