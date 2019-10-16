@@ -41,7 +41,7 @@ class Isoleucine(Input, Output):
                  shift_matrix='default',
                  ref_opt_file='default',
                  force_constant='default',
-                 input=Input):
+                 inp=Input):
         '''
         This collects all the required inputs and initializes the classes
         Input and Output.
@@ -50,7 +50,7 @@ class Isoleucine(Input, Output):
         '''
 
         #read everything in! these are input and output functions
-        input.__init__(self,
+        inp.__init__(self,
                        file,
                        shift_matrix=shift_matrix,
                        ref_opt_file=ref_opt_file)
