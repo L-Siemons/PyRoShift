@@ -8,8 +8,13 @@ chemical shifts. Currently it is implemented for isoleucine.
 If you want to add another residue please get in touch!
 
 If you use this program please cite the following:
-XXX
 
+Determining isoleucine side-chain rotamer-sampling in proteins from 13C chemical shift.
+Siemons L, Uluca-Yazgi B, Pritchard RB, McCarthy S, Heise H, Hansen F.
+ChemCom 2019;
+
+DOI:  10.1039/C9CC06496F
+Site: https://pubs.rsc.org/en/Content/ArticleLanding/2019/CC/C9CC06496F#!divAbstract
 
 What does it do?
 ----------------
@@ -60,7 +65,10 @@ How to use?
 
 For an example on how to use this module please see the example_run/ directory.
 Here there should be an example called run.py and also a ipython notebook describing all the
-steps. To run the example script simply use
+steps. Sometimes the notebook doesn't render properly on github so I have also exported it as
+an html file that can be opened in a browser.
+
+To run the example script simply use
 ```
 python run.py
 ```
