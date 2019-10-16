@@ -71,6 +71,11 @@ Here there should be an example called run.py and also a ipython notebook descri
 steps. Sometimes the notebook doesn't render properly on github so I have also exported it as
 an html file that can be opened in a browser.
 
+Sometimes the Ipython Notebook does not render correctly in the github page. If this happens the
+Notebook can be viewed at
+
+https://nbviewer.jupyter.org/github/L-Siemons/PyRoShift/blob/master/example_run/Tutorial.ipynb
+
 To run the example script simply use
 ```
 python run.py
